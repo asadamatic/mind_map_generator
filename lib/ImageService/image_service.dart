@@ -70,7 +70,6 @@ class ImageService {
       if (pickedFile != null) {
         file = File(pickedFile.path);
         if (file != null) {
-
           return file.path;
           // final bytes = await file.readAsBytes();
           // final base64encodedImage = base64Encode(bytes);
@@ -98,7 +97,6 @@ class ImageService {
                 buttonOkOnPressed: () => openAppSettings(),
               ));
     }
-
 
     //  final bytes = await file.readAsBytes();
     // final base64encodedImage = base64Encode(bytes);

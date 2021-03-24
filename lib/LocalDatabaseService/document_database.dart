@@ -17,8 +17,8 @@ class DocumentsDatabaseNotifier extends ChangeNotifier {
     final Database db = await LocalDatabase().database;
 
     // Query the table for all The DocumentImages.
-    final List<Map<String, dynamic>> dataMap =
-        await db.query(_tableName, groupBy: 'docId');
+    final List<Map<String, dynamic>> dataMap = await db.rawQuery('SELECT DISTINCT * FROM documentImagesTable cross join documentImagesTable mindMapImagesTable where documentImagesTable.docId != mindMapImagesTable.docId and documentImagesTable.status = 0');
+        // await db.query(_tableName, groupBy: 'docId', where: 'status = ?', whereArgs: [0]);
 
     return List.generate(dataMap.length, (i) {
       return DocumentImage(
@@ -121,13 +121,13 @@ class DocumentsDatabaseNotifier extends ChangeNotifier {
         await db.query(_tableName, columns: ['image'], where: 'docId = ?', whereArgs: [docId]);
 
 
-    return List.generate(dataMap.length, (index) {
+    return Future.wait(List.generate(dataMap.length, (index) async{
       final imageFile  = File(dataMap[index]['image']);
-      final bytes = imageFile.readAsBytesSync();
+      final bytes = await imageFile.readAsBytes();
 
       return base64Encode(bytes);
 
-    });
+    }));
   }
 
   DocumentImage fromMap(Map<String, dynamic> dataMap){

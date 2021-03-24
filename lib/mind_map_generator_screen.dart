@@ -118,10 +118,9 @@ class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
       ),
       body: FutureBuilder<String>(
         future: NetworkService(ipv4: widget.ipv4, port: widget.port)
-            .connectToServer(widget.base64EncodedImages),
+            .connectToServer(widget.base64EncodedImages, widget.docId),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-
             final File imageFile = File(snapshot.data);
             return Column(
               children: [

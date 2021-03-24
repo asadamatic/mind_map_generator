@@ -17,7 +17,7 @@ class MindMapsListScreen extends StatefulWidget {
 class _MindMapsListScreenState extends State<MindMapsListScreen> {
   File scannedDocument;
   TextEditingController hostEditingController =
-      TextEditingController(text: '192.168.18.8');
+      TextEditingController(text: '192.168.43.127');
   TextEditingController portEditingController =
       TextEditingController(text: '8000');
 

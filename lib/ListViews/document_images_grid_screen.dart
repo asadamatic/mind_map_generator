@@ -28,27 +28,21 @@ class _DocumentImagesGridScreenState extends State<DocumentImagesGridScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    print('Hi Asad');
     if (widget.imageScreenActions == ImageScreenActions.newDocument) {
       id = DateTime.now().toString();
     } else if (widget.imageScreenActions == ImageScreenActions.fromMindMap ||
         widget.imageScreenActions == ImageScreenActions.fromDraft) {
       id = widget.id;
     }
-
-    print('*********');
-
-    print('*********');
-
-    print('*********');
-
-    print('*********');
-    print(id);
   }
 
   @override
   Widget build(BuildContext context) {
 
-
+    print(id);
+    print('Its me');
     return Scaffold(
       appBar: AppBar(
         title: Text(DateTime.now().toString() ?? 'MindMap'),
@@ -89,7 +83,8 @@ class _DocumentImagesGridScreenState extends State<DocumentImagesGridScreen> {
 // ignore: must_be_immutable
 class FloatingButtons extends StatelessWidget {
   final ImageScreenActions imageScreenActions;
-  FloatingButtons({@required this.id, this.imageScreenActions, this.port, this.ipv4});
+  FloatingButtons(
+      {@required this.id, this.imageScreenActions, this.port, this.ipv4});
 
   final String id;
   final String ipv4, port;
@@ -113,6 +108,8 @@ class FloatingButtons extends StatelessWidget {
                     await Provider.of<DocumentsDatabaseNotifier>(context,
                             listen: false)
                         .getImages(id);
+
+
                 if (imageScreenActions == ImageScreenActions.fromDraft ||
                     imageScreenActions == ImageScreenActions.newDocument) {
                   Navigator.push(
@@ -123,7 +120,8 @@ class FloatingButtons extends StatelessWidget {
                                 ipv4: ipv4,
                                 base64EncodedImages: images,
                                 docId: id,
-                                mapScreenActions: MindMapGeneratorScreenActions.insert,
+                                mapScreenActions:
+                                    MindMapGeneratorScreenActions.insert,
                               )));
                 } else if (imageScreenActions ==
                     ImageScreenActions.fromMindMap) {
@@ -135,7 +133,8 @@ class FloatingButtons extends StatelessWidget {
                                 ipv4: ipv4,
                                 base64EncodedImages: images,
                                 docId: id,
-                                mapScreenActions: MindMapGeneratorScreenActions.update,
+                                mapScreenActions:
+                                    MindMapGeneratorScreenActions.update,
                               )));
                 }
               }),
@@ -168,15 +167,16 @@ class FloatingButtons extends StatelessWidget {
                             children: [
                               InkWell(
                                 onTap: () async {
-                                  final filePath =
-                                      await ImageService().captureImage(
+                                  final filePath = await ImageService()
+                                      .captureImage(
                                           imageSource: ImageSource.camera,
                                           buildContext: buildContext);
 
                                   if (filePath != null) {
-                                    print(filePath);
+
                                     Navigator.pop(buildContext);
-                                    await Provider.of<DocumentsDatabaseNotifier>(
+                                    await Provider.of<
+                                                DocumentsDatabaseNotifier>(
                                             context,
                                             listen: false)
                                         .insertDocumentImage(
@@ -207,14 +207,15 @@ class FloatingButtons extends StatelessWidget {
                               ),
                               InkWell(
                                 onTap: () async {
-                                  final filePath =
-                                      await ImageService().captureImage(
+                                  final filePath = await ImageService()
+                                      .captureImage(
                                           imageSource: ImageSource.gallery,
                                           buildContext: buildContext);
 
                                   if (filePath != null) {
                                     Navigator.pop(buildContext);
-                                    await Provider.of<DocumentsDatabaseNotifier>(
+                                    await Provider.of<
+                                                DocumentsDatabaseNotifier>(
                                             context,
                                             listen: false)
                                         .insertDocumentImage(
