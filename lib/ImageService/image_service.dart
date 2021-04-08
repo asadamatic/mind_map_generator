@@ -1,8 +1,8 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:dialogs/MessageDialog/message_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -56,7 +56,7 @@ class ImageService {
 
   Future<String> captureImage(
       {ImageSource imageSource, BuildContext buildContext}) async {
-    File file;
+    String filePath;
 
     final permission = imageSource == ImageSource.camera
         ? Permission.camera
@@ -68,9 +68,9 @@ class ImageService {
           await _imagePicker.getImage(source: imageSource);
       // final Uint8List bytes = await pickedFile.readAsBytes();
       if (pickedFile != null) {
-        file = File(pickedFile.path);
-        if (file != null) {
-          return file.path;
+        filePath = await cropImage(pickedFile);
+        if (filePath != null) {
+          return filePath;
           // final bytes = await file.readAsBytes();
           // final base64encodedImage = base64Encode(bytes);
           // return base64encodedImage;
@@ -100,9 +100,20 @@ class ImageService {
 
     //  final bytes = await file.readAsBytes();
     // final base64encodedImage = base64Encode(bytes);
-    return file.path;
+    return filePath;
   }
 
+  Future<String> cropImage(PickedFile pickedFile) async {
+    final file = await ImageCropper.cropImage(
+        sourcePath: File(pickedFile.path).path,
+        androidUiSettings: const AndroidUiSettings(
+            toolbarTitle: 'Cropper', lockAspectRatio: false,
+        ),
+        iosUiSettings:
+            const IOSUiSettings(aspectRatioLockEnabled: false, minimumAspectRatio: 1.0, title: 'Cropper'));
+
+    return file.path;
+  }
   // Future<String> getCroppedImage() async {
   //   String imagePath;
   //   // Platform messages may fail, so we use a try/catch PlatformException.

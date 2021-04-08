@@ -29,15 +29,18 @@ dependencies:
   dialogs: ^0.0.4
   path_provider: ^2.0.1
   cupertino_icons: ^1.0.0
-  im_stepper: ^0.1.2+10
+  sk_onboarding_screen: ^1.0.1
   shared_preferences: ^2.0.3
   provider: ^5.0.0
   http:
   sqflite: ^2.0.0+2
   path:
   intl:
-
-
+  image_cropper: ^1.4.0
+  graphview: ^0.6.7
+  page_transition: ^1.1.7+6
+  gallery_saver:
+  share: ^2.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

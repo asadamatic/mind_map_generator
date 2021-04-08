@@ -1,9 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mind_map_generator/CustomChangeNotifiers/document_images_notifier.dart';
 import 'package:mind_map_generator/DataModels/document_image.dart';
 import 'package:mind_map_generator/ImageService/image_service.dart';
-import 'package:mind_map_generator/LocalDatabaseService/document_database.dart';
 import 'package:mind_map_generator/CustomElements/image_card.dart';
 import 'package:mind_map_generator/mind_map_generator_screen.dart';
 import 'package:provider/provider.dart';
@@ -11,10 +13,9 @@ import 'package:provider/provider.dart';
 enum ImageScreenActions { newDocument, fromDraft, fromMindMap }
 
 class DocumentImagesGridScreen extends StatefulWidget {
-  final String ipv4, port, id;
+  final String id;
   final ImageScreenActions imageScreenActions;
-  DocumentImagesGridScreen(
-      {this.ipv4, this.port, this.imageScreenActions, this.id});
+  DocumentImagesGridScreen({this.imageScreenActions, this.id});
 
   @override
   _DocumentImagesGridScreenState createState() =>
@@ -29,7 +30,6 @@ class _DocumentImagesGridScreenState extends State<DocumentImagesGridScreen> {
     // TODO: implement initState
     super.initState();
 
-    print('Hi Asad');
     if (widget.imageScreenActions == ImageScreenActions.newDocument) {
       id = DateTime.now().toString();
     } else if (widget.imageScreenActions == ImageScreenActions.fromMindMap ||
@@ -40,43 +40,204 @@ class _DocumentImagesGridScreenState extends State<DocumentImagesGridScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-    print(id);
-    print('Its me');
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(DateTime.now().toString() ?? 'MindMap'),
-      ),
-      body: Consumer<DocumentsDatabaseNotifier>(
-        builder: (context, value, child) {
-          return FutureBuilder<List<DocumentImage>>(
-              future: value.documentImages(id),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return GridView.builder(
-                      itemCount: snapshot.data.length ?? 0,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: (MediaQuery.of(context).orientation ==
-                                  Orientation.portrait)
-                              ? 2
-                              : 3),
-                      itemBuilder: (context, index) {
-                        return ImageCard(
-                            imageDocument: snapshot.data[index],
-                            imageIndex: index);
-                      });
+    return ChangeNotifierProvider.value(
+        value: DocumentImagesNotifier(docId: id),
+        builder: (buildContext, child) {
+          final isSelected = Provider.of<DocumentImagesNotifier>(buildContext)
+              .selectedDocumentImagesIndexes
+              .isNotEmpty;
+          final isOnlyCurrentSelected =
+              Provider.of<DocumentImagesNotifier>(buildContext)
+                      .selectedDocumentImagesIndexes
+                      .length ==
+                  1;
+          return WillPopScope(
+            onWillPop: () async {
+              if (isSelected) {
+                Provider.of<DocumentImagesNotifier>(buildContext, listen: false)
+                    .removeAllSelectedIndexes();
+                return false;
+              } else {
+                return true;
+              }
+            },
+            child: GestureDetector(
+              onTap: () {
+                if (isSelected) {
+                  Provider.of<DocumentImagesNotifier>(buildContext,
+                          listen: false)
+                      .removeAllSelectedIndexes();
+                  return false;
+                } else {
+                  return true;
                 }
-                return CircularProgressIndicator();
-              });
-        },
-      ),
-      floatingActionButton: FloatingButtons(
-        id: id,
-        imageScreenActions: widget.imageScreenActions,
-        port: widget.port,
-        ipv4: widget.ipv4,
-      ),
-    );
+              },
+              child: Scaffold(
+                appBar: AppBar(
+                    title: Text(widget.imageScreenActions ==
+                            ImageScreenActions.newDocument
+                        ? 'New Document'
+                        : 'Document Images'),
+                    actions: isSelected
+                        ? [
+                            IconButton(
+                                icon: Icon(Icons.delete),
+                                onPressed: () {
+                                  Provider.of<DocumentImagesNotifier>(
+                                          buildContext,
+                                          listen: false)
+                                      .deleteAllSelected();
+                                }),
+                            if (isOnlyCurrentSelected)
+                              IconButton(
+                                  icon: Icon(Icons.refresh),
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                        context: context,
+                                        builder: (bottomSheetContext) {
+                                          return Container(
+                                            height: 200.0,
+                                            padding: const EdgeInsets.only(
+                                                top: 15.0,
+                                                left: 8.0,
+                                                right: 8.0),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Select an image of your documents!',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .headline5,
+                                                ),
+                                                Divider(),
+                                                Column(
+                                                  children: [
+                                                    InkWell(
+                                                      onTap: () async {
+                                                        final filePath =
+                                                            await ImageService()
+                                                                .captureImage(
+                                                                    imageSource:
+                                                                        ImageSource
+                                                                            .camera,
+                                                                    buildContext:
+                                                                        buildContext);
+
+                                                        if (filePath != null) {
+                                                          Navigator.pop(
+                                                              bottomSheetContext);
+                                                          Provider.of<DocumentImagesNotifier>(
+                                                                  buildContext,
+                                                                  listen: false)
+                                                              .update(filePath);
+                                                        }
+                                                      },
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(8.0),
+                                                        child: Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
+                                                          children: [
+                                                            Text('Camera',
+                                                                style: Theme.of(
+                                                                        context)
+                                                                    .textTheme
+                                                                    .headline6),
+                                                            FaIcon(
+                                                              FontAwesomeIcons
+                                                                  .cameraRetro,
+                                                            )
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    InkWell(
+                                                      onTap: () async {
+                                                        final filePath =
+                                                            await ImageService()
+                                                                .captureImage(
+                                                                    imageSource:
+                                                                        ImageSource
+                                                                            .gallery,
+                                                                    buildContext:
+                                                                        buildContext);
+
+                                                        if (filePath != null) {
+                                                          Navigator.pop(
+                                                              bottomSheetContext);
+                                                          Provider.of<DocumentImagesNotifier>(
+                                                                  buildContext,
+                                                                  listen: false)
+                                                              .update(filePath);
+                                                        }
+                                                      },
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(8.0),
+                                                        child: Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
+                                                          children: [
+                                                            Text(
+                                                              'Gallery',
+                                                              style: Theme.of(
+                                                                      context)
+                                                                  .textTheme
+                                                                  .headline6,
+                                                            ),
+                                                            FaIcon(
+                                                                FontAwesomeIcons
+                                                                    .photoVideo)
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    )
+                                                  ],
+                                                )
+                                              ],
+                                            ),
+                                          );
+                                        });
+                                  }),
+                          ]
+                        : []),
+                body: Consumer<DocumentImagesNotifier>(
+                  builder: (context, value, child) {
+                    if (value != null) {
+                      return GridView.builder(
+                          itemCount: value.documentImages?.length ?? 0,
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount:
+                                      (MediaQuery.of(context).orientation ==
+                                              Orientation.portrait)
+                                          ? 2
+                                          : 3),
+                          itemBuilder: (context, index) {
+                            return ImageCard(
+                                imageDocument: value.documentImages[index],
+                                imageIndex: index);
+                          });
+                    }
+
+                    return Center();
+                  },
+                ),
+                floatingActionButton: FloatingButtons(
+                  id: id,
+                  imageScreenActions: widget.imageScreenActions,
+                ),
+              ),
+            ),
+          );
+        });
   }
 }
 
@@ -104,38 +265,48 @@ class FloatingButtons extends StatelessWidget {
                 color: Theme.of(context).primaryColor,
               ),
               onPressed: () async {
-                List<String> images =
-                    await Provider.of<DocumentsDatabaseNotifier>(context,
-                            listen: false)
-                        .getImages(id);
-
-
-                if (imageScreenActions == ImageScreenActions.fromDraft ||
-                    imageScreenActions == ImageScreenActions.newDocument) {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => MindMapGeneratorScreen(
-                                port: port,
-                                ipv4: ipv4,
-                                base64EncodedImages: images,
-                                docId: id,
-                                mapScreenActions:
-                                    MindMapGeneratorScreenActions.insert,
-                              )));
-                } else if (imageScreenActions ==
-                    ImageScreenActions.fromMindMap) {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => MindMapGeneratorScreen(
-                                port: port,
-                                ipv4: ipv4,
-                                base64EncodedImages: images,
-                                docId: id,
-                                mapScreenActions:
-                                    MindMapGeneratorScreenActions.update,
-                              )));
+                if (Provider.of<DocumentImagesNotifier>(context, listen: false)
+                        .documentImages
+                        .length ==
+                    0) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(
+                    'Please scan your docs first!',
+                    style: TextStyle(fontSize: 18.0),
+                  )));
+                } else {
+                  final images = await Future.wait(
+                      Provider.of<DocumentImagesNotifier>(context,
+                          listen: false)
+                          .documentImages
+                          .map((documentImage) async {
+                        final file = File(documentImage.imageFilePath);
+                        final bytes = await file.readAsBytes();
+                        return base64Encode(bytes);
+                      }));
+                  if (imageScreenActions == ImageScreenActions.fromDraft ||
+                      imageScreenActions == ImageScreenActions.newDocument) {
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => MindMapGeneratorScreen(
+                                  base64EncodedImages: images,
+                                  docId: id,
+                                  mapScreenActions:
+                                      MindMapGeneratorScreenActions.insert,
+                                )));
+                  } else if (imageScreenActions ==
+                      ImageScreenActions.fromMindMap) {
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => MindMapGeneratorScreen(
+                                  base64EncodedImages: images,
+                                  docId: id,
+                                  mapScreenActions:
+                                      MindMapGeneratorScreenActions.update,
+                                )));
+                  }
                 }
               }),
         ),
@@ -173,13 +344,11 @@ class FloatingButtons extends StatelessWidget {
                                           buildContext: buildContext);
 
                                   if (filePath != null) {
-
                                     Navigator.pop(buildContext);
-                                    await Provider.of<
-                                                DocumentsDatabaseNotifier>(
+                                    await Provider.of<DocumentImagesNotifier>(
                                             context,
                                             listen: false)
-                                        .insertDocumentImage(
+                                        .append(
                                       DocumentImage(
                                           docId: id,
                                           imageFilePath: filePath,
@@ -214,11 +383,10 @@ class FloatingButtons extends StatelessWidget {
 
                                   if (filePath != null) {
                                     Navigator.pop(buildContext);
-                                    await Provider.of<
-                                                DocumentsDatabaseNotifier>(
+                                    await Provider.of<DocumentImagesNotifier>(
                                             context,
                                             listen: false)
-                                        .insertDocumentImage(
+                                        .append(
                                       DocumentImage(
                                           docId: id,
                                           imageFilePath: filePath,

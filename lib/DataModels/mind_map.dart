@@ -1,9 +1,9 @@
 
 class MindMap{
 
-  final String docId, imageFile, name;
+  String docId, imageFile, name, text;
 
-  MindMap({this.name, this.docId, this.imageFile});
+  MindMap({this.name, this.docId, this.imageFile, this.text});
 
-  Map<String, dynamic> toMap() => {'docId': docId, 'image': imageFile, 'name': name};
+  Map<String, dynamic> toMap() => {'docId': docId, 'image': imageFile, 'name': name, 'text': text};
 }

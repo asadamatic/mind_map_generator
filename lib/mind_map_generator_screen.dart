@@ -1,134 +1,65 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:gallery_saver/gallery_saver.dart';
+import 'package:mind_map_generator/CustomChangeNotifiers/connection_change_notifier.dart';
+import 'package:mind_map_generator/CustomChangeNotifiers/mind_map_images_notifier.dart';
 import 'package:mind_map_generator/DataModels/mind_map.dart';
 import 'package:mind_map_generator/LocalDatabaseService/document_database.dart';
-import 'package:mind_map_generator/LocalDatabaseService/mind_map_database.dart';
 import 'package:mind_map_generator/NetworkService/network_service.dart';
 import 'package:provider/provider.dart';
 
-enum MindMapGeneratorScreenActions { insert, update }
+enum MindMapGeneratorScreenActions { insert, update, reCreate }
 
 class MindMapGeneratorScreen extends StatefulWidget {
   final List<String> base64EncodedImages;
-  final String ipv4;
-  final String port;
+  final List<String> listOfData;
   final String docId;
   final MindMapGeneratorScreenActions mapScreenActions;
 
   MindMapGeneratorScreen(
       {this.docId,
-      this.port,
       this.base64EncodedImages,
-      this.ipv4,
-      this.mapScreenActions});
+      this.mapScreenActions,
+      this.listOfData});
 
   @override
   _MindMapGeneratorScreenState createState() => _MindMapGeneratorScreenState();
 }
 
 class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
-
-
   TextEditingController nameController = TextEditingController();
 
   @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final ipv4 =
+        Provider.of<ConnectionChangeNotifier>(context, listen: false).ipv4;
+    final port =
+        Provider.of<ConnectionChangeNotifier>(context, listen: false).port;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget?.docId.toString()),
-        actions: [
-          IconButton(
-              icon: Icon(Icons.edit),
-              onPressed: () {
-                showDialog(
-                    context: context,
-                    barrierDismissible: true,
-                    builder: (context) => Dialog(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16.0)),
-                          child: Container(
-                            height: 200.0,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0, vertical: 12.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                Text('Name Your Mind Map'),
-                                TextFormField(
-                                  controller: nameController,
-                                  decoration: InputDecoration(
-                                      hintText: 'mind map name'),
-                                ),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                        flex: 5,
-                                        child: FlatButton(
-                                          child: Text(
-                                            'Cancel',
-                                          ),
-                                          textColor:
-                                              Theme.of(context).primaryColor,
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 0.0),
-                                          color: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10.0),
-                                          ),
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                        )),
-                                    Spacer(flex: 1),
-                                    Expanded(
-                                        flex: 5,
-                                        child: FlatButton(
-                                          child: Text(
-                                            'Done',
-                                          ),
-                                          textColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 0.0),
-                                          color: Theme.of(context).primaryColor,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10.0),
-                                          ),
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                        )),
-                                  ],
-                                )
-                              ],
-                            ),
-                          ),
-                        ));
-              })
-        ],
+        title: Text('Mind Map'),
       ),
-      body: FutureBuilder<String>(
-        future: NetworkService(ipv4: widget.ipv4, port: widget.port)
-            .connectToServer(widget.base64EncodedImages, widget.docId),
+      body: FutureBuilder<MindMap>(
+        future:
+            widget.mapScreenActions == MindMapGeneratorScreenActions.reCreate
+                ? NetworkService(ipv4: ipv4, port: port)
+                    .editMindMap(widget.listOfData, widget.docId)
+                : NetworkService(ipv4: ipv4, port: port)
+                    .generateMindMap(widget.base64EncodedImages, widget.docId),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            final File imageFile = File(snapshot.data);
+            final File imageFile = File(snapshot.data.imageFile);
+
             return Column(
               children: [
                 Expanded(
                   child: InteractiveViewer(
-                    child: AspectRatio(
-                      aspectRatio: 1 / 1.5,
-                      child: Image(image: FileImage(imageFile)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: AspectRatio(
+                        aspectRatio: 1 / 1.5,
+                        child: Image(image: FileImage(imageFile)),
+                      ),
                     ),
                   ),
                 ),
@@ -140,7 +71,7 @@ class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
                         child: Container(
                           margin: const EdgeInsets.symmetric(horizontal: 10.0),
                           child: ElevatedButton(
-                              child: Text('Discard'),
+                              child: Text('Discard', style: TextStyle(color: Theme.of(context).primaryColor),),
                               style: ButtonStyle(
                                   shape: MaterialStateProperty.all(
                                       ContinuousRectangleBorder(
@@ -149,10 +80,12 @@ class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
                                         color: Theme.of(context).primaryColor,
                                         width: 1.5),
                                   )),
-                                  backgroundColor: MaterialStateProperty.all(
-                                      Colors.transparent),
+                                  backgroundColor:
+                                      MaterialStateProperty.all(Colors.white),
                                   textStyle: MaterialStateProperty.all(
-                                      TextStyle(color: Colors.white))),
+                                      TextStyle(
+                                          color:
+                                              Theme.of(context).primaryColor))),
                               onPressed: () {
                                 Navigator.pop(context);
                               }),
@@ -178,31 +111,25 @@ class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
                               onPressed: () async {
                                 if (widget.mapScreenActions ==
                                     MindMapGeneratorScreenActions.insert) {
-                                  await Provider.of<MindMapDatabaseNotifier>(
-                                          context,
+                                  Provider.of<MindMapImagesNotifier>(context,
                                           listen: false)
-                                      .insertMinMap(MindMap(
-                                          docId: widget.docId,
-                                          imageFile: snapshot.data,
-                                          name: nameController.text.isEmpty
-                                              ? widget.docId
-                                              : nameController.text ??
-                                                  widget.docId));
+                                      .append(snapshot.data);
+
+                                  await GallerySaver.saveImage(
+                                      snapshot.data.imageFile);
                                 } else if (widget.mapScreenActions ==
-                                    MindMapGeneratorScreenActions.update) {
-                                  await Provider.of<MindMapDatabaseNotifier>(
-                                          context,
+                                        MindMapGeneratorScreenActions.update ||
+                                    widget.mapScreenActions ==
+                                        MindMapGeneratorScreenActions
+                                            .reCreate) {
+                                  Provider.of<MindMapImagesNotifier>(context,
                                           listen: false)
-                                      .updateMinMap(MindMap(
-                                          docId: widget.docId,
-                                          imageFile: snapshot.data,
-                                          name: nameController.text.isEmpty
-                                              ? widget.docId
-                                              : nameController.text));
+                                      .updateMindMap(snapshot.data);
+                                  await GallerySaver.saveImage(
+                                      snapshot.data.imageFile);
                                 }
-                                await Provider.of<DocumentsDatabaseNotifier>(
-                                        context,
-                                        listen: false)
+
+                                DocumentsDatabaseNotifier()
                                     .updateDocumentStatus(widget.docId, 1);
                                 Navigator.pop(context);
                               }),
@@ -214,7 +141,19 @@ class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
               ],
             );
           }
-          return Center(child: CircularProgressIndicator());
+          return Center(child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CircularProgressIndicator(),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 4.0),
+                child: Text('Please wait, while we are generating mind map for You :)'),
+              )
+            ],
+          ));
         },
       ),
     );

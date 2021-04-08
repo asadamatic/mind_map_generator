@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mind_map_generator/CustomChangeNotifiers/connection_change_notifier.dart';
+import 'package:mind_map_generator/CustomChangeNotifiers/mind_map_images_notifier.dart';
 import 'package:mind_map_generator/CustomElements/mind_map_card.dart';
-import 'package:mind_map_generator/DataModels/mind_map.dart';
-import 'package:mind_map_generator/LocalDatabaseService/document_database.dart';
-import 'package:mind_map_generator/LocalDatabaseService/mind_map_database.dart';
 import 'package:mind_map_generator/ListViews/document_drafts.dart';
 import 'dart:io';
 
@@ -16,88 +15,213 @@ class MindMapsListScreen extends StatefulWidget {
 
 class _MindMapsListScreenState extends State<MindMapsListScreen> {
   File scannedDocument;
-  TextEditingController hostEditingController =
-      TextEditingController(text: '192.168.43.127');
-  TextEditingController portEditingController =
-      TextEditingController(text: '8000');
-
-  testingFuture() async {
-    await Provider.of<DocumentsDatabaseNotifier>(context, listen: false)
-        .getDistinctDocs();
-  }
+  TextEditingController hostEditingController;
+  TextEditingController portEditingController;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    testingFuture();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Mind Maps'),
-        actions: [
-          TextButton(
-            child: Text('Drafts'),
-            onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => DraftsListScreen()));
-            },
-          )
-        ],
-      ),
-      body: Column(
-        children: [
-          Column(
-            children: [
-              TextFormField(
-                controller: hostEditingController,
-              ),
-              TextFormField(
-                controller: portEditingController,
-              ),
-            ],
+    final isSelected = Provider.of<MindMapImagesNotifier>(context)
+        .selectedMindMapIndexes
+        .isNotEmpty;
+
+    hostEditingController = TextEditingController(
+        text:
+            Provider.of<ConnectionChangeNotifier>(context, listen: false).ipv4);
+
+    portEditingController = TextEditingController(
+        text:
+            Provider.of<ConnectionChangeNotifier>(context, listen: false).port);
+    return GestureDetector(
+      onTap: () {
+        Provider.of<MindMapImagesNotifier>(context, listen: false)
+            .removeAllSelectedIndexes();
+      },
+      child: WillPopScope(
+        onWillPop: () async{
+
+          if (isSelected){
+
+            Provider.of<MindMapImagesNotifier>(context, listen: false).removeAllSelectedIndexes();
+            return false;
+          }else{
+            return true;
+          }
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text('Mind Maps'),
+            leading: isSelected
+                ? IconButton(
+                    icon: Icon(Icons.arrow_back),
+                    onPressed: () {
+                      Provider.of<MindMapImagesNotifier>(context, listen: false)
+                          .removeAllSelectedIndexes();
+                    })
+                : IconButton(
+                    icon: Icon(Icons.settings),
+                    onPressed: () {
+                      showDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          builder: (context) => Dialog(
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16.0)),
+                                child: Container(
+                                  height: 200.0,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 18.0, vertical: 12.0),
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 8.0),
+                                        child: Text('Server Config', style: TextStyle(fontSize: 18.0),),
+                                      ),
+                                      TextFormField(
+                                        controller: hostEditingController,
+                                      ),
+                                      TextFormField(
+                                        controller: portEditingController,
+                                      ),
+                                      Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(top: 8.0),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                  flex: 5,
+                                                  child: FlatButton(
+                                                    child: Text(
+                                                      'Cancel',
+                                                    ),
+                                                    textColor: Theme.of(context)
+                                                        .primaryColor,
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                            vertical: 0.0),
+                                                    color: Colors.white,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(10.0),
+                                                    ),
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                  )),
+                                              Spacer(flex: 1),
+                                              Expanded(
+                                                  flex: 5,
+                                                  child: FlatButton(
+                                                    child: Text(
+                                                      'Done',
+                                                    ),
+                                                    textColor: Colors.white,
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                            vertical: 0.0),
+                                                    color: Theme.of(context)
+                                                        .primaryColor,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(10.0),
+                                                    ),
+                                                    onPressed: () {
+                                                      Provider.of<ConnectionChangeNotifier>(
+                                                              context,
+                                                              listen: false)
+                                                          .change(
+                                                              hostEditingController
+                                                                  .text
+                                                                  .trim(),
+                                                              portEditingController
+                                                                  .text
+                                                                  .trim());
+                                                      Navigator.pop(context);
+                                                    },
+                                                  )),
+                                            ],
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ));
+                    }),
+            actions: isSelected
+                ? [
+                    IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () {
+                          Provider.of<MindMapImagesNotifier>(context,
+                                  listen: false)
+                              .deleteAllSelected();
+                          // Provider.of<MindMapImagesNotifier>(context,
+                          //         listen: false)
+                          //     .removeAllSelectedIndexes();
+                        })
+                  ]
+                : [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextButton(
+                        child: Text('Drafts', style: TextStyle(color: Colors.white, fontSize: 16.0,),),
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => DraftsListScreen()));
+                        },
+                      ),
+                    )
+                  ],
           ),
-          Expanded(
-            child: Consumer<MindMapDatabaseNotifier>(
-              builder: (context, value, child) {
-                return FutureBuilder<List<MindMap>>(
-                  future: value.getMindMaps(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return ListView.builder(
-                          itemCount: snapshot.data?.length ?? 0,
-                          itemBuilder: (context, index) {
-                            return MindMapCard(
-                              mindMap: snapshot.data[index],
-                            );
-                          });
-                    }
-                    return Center(child: CircularProgressIndicator());
-                  },
-                );
-              },
+          body: Padding(
+            padding: const EdgeInsets.only(top: 12.0),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Consumer<MindMapImagesNotifier>(
+                    builder: (context, value, child) {
+                      if (value != null) {
+                        return ListView.builder(
+                            itemCount: value.mindMaps?.length ?? 0,
+                            itemBuilder: (context, index) {
+                              return MindMapCard(
+                                mindMap: value.mindMaps[index],
+                                imageIndex: index,
+                              );
+                            });
+                      }
+                      return Center(child: CircularProgressIndicator());
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Theme.of(context).primaryColor,
-        child: Icon(
-          Icons.camera_alt,
+          floatingActionButton: FloatingActionButton(
+            backgroundColor: Theme.of(context).primaryColor,
+            child: Icon(
+              Icons.camera_alt,
+            ),
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => DocumentImagesGridScreen(
+                            imageScreenActions: ImageScreenActions.newDocument,
+                          )));
+            },
+          ),
         ),
-        onPressed: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => DocumentImagesGridScreen(
-                        ipv4: hostEditingController.text.trim(),
-                        port: portEditingController.text.trim(),
-                        imageScreenActions: ImageScreenActions.newDocument,
-                      )));
-        },
       ),
     );
   }

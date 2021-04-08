@@ -6,6 +6,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mind_map_generator/DataModels/mind_map.dart';
 
 import 'package:mind_map_generator/ListViews/document_images_grid_screen.dart';
+import 'package:mind_map_generator/mind_map_editing_screen.dart';
+import 'package:share/share.dart';
 
 class InteractiveMindMapView extends StatelessWidget {
   final MindMap mindMap;
@@ -23,80 +25,47 @@ class InteractiveMindMapView extends StatelessWidget {
         iconTheme: IconThemeData(color: Theme.of(context).primaryColor),
         actions: [
           IconButton(
-              icon: Icon(Icons.more_vert),
-              onPressed: () {
-                showModalBottomSheet(
-                    context: context,
-                    builder: (buildContext) {
-                      return Container(
-                        height: 200.0,
-                        padding: const EdgeInsets.only(
-                            top: 15.0, left: 8.0, right: 8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Column(
-                              children: [
-                                InkWell(
-                                  onTap: () async {},
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text('Save to Gallery',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .headline6),
-                                        FaIcon(
-                                          FontAwesomeIcons.download,
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                InkWell(
-                                  onTap: () async {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (buildContext) =>
-                                                DocumentImagesGridScreen(
-                                                  id: mindMap.docId,
-                                                  imageScreenActions:
-                                                      ImageScreenActions
-                                                          .fromMindMap,
-                                                )));
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          'See Original',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headline6,
-                                        ),
-                                        FaIcon(FontAwesomeIcons.fileImage)
-                                      ],
-                                    ),
-                                  ),
-                                )
-                              ],
-                            )
-                          ],
-                        ),
-                      );
-                    });
-              })
+            icon: Icon(Icons.share),
+            onPressed: () {
+              Share.shareFiles(['${mindMap.imageFile}'], text: '');
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () {
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (buildContext) => MindMapEditingScreen(
+                          mindMap: mindMap,
+                          docId: mindMap.docId,
+                          listOfData: (jsonDecode(mindMap.text) as List)
+                              ?.map((e) => e as String)
+                              ?.toList())));
+            },
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextButton(onPressed: (){
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (buildContext) =>
+                          DocumentImagesGridScreen(
+                            id: mindMap.docId,
+                            imageScreenActions:
+                            ImageScreenActions
+                                .fromMindMap,
+                          )));
+            }, child: Text('Documents', style: TextStyle(fontSize: 16.0),)),
+          ),
+
         ],
       ),
-      body: Center(
-        child: InteractiveViewer(child: Image(image: FileImage(imageFile))),
+      body: InteractiveViewer(
+        child: Center(
+          child: Image(image: FileImage(imageFile)),
+        ),
       ),
     );
   }

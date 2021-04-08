@@ -1,17 +1,16 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mind_map_generator/CustomChangeNotifiers/draft_Images_notifier.dart';
 import 'package:mind_map_generator/DataModels/document_image.dart';
 import 'package:mind_map_generator/ListViews/document_images_grid_screen.dart';
-import 'package:mind_map_generator/LocalDatabaseService/document_database.dart';
-import 'package:mind_map_generator/LocalDatabaseService/mind_map_database.dart';
 import 'package:provider/provider.dart';
 
 class DraftCard extends StatefulWidget {
   final DocumentImage documentImage;
-  DraftCard({this.documentImage});
+  final int draftIndex;
+  DraftCard({this.documentImage, this.draftIndex});
   @override
   _DraftCardState createState() => _DraftCardState();
 }
@@ -19,32 +18,58 @@ class DraftCard extends StatefulWidget {
 class _DraftCardState extends State<DraftCard> {
   @override
   Widget build(BuildContext context) {
+    final isSelected = Provider.of<DraftImagesNotifier>(context)
+        .selectedDraftIndexes
+        .isNotEmpty;
+    final isCurrentSelected = Provider.of<DraftImagesNotifier>(context)
+        .selectedDraftIndexes
+        .contains(widget.draftIndex);
     final String formattedDate = DateFormat.yMMMMEEEEd()
         .format(DateTime.parse(widget.documentImage.docId));
     return InkWell(
+      onLongPress: () {
+        if (!isCurrentSelected) {
+          Provider.of<DraftImagesNotifier>(context, listen: false)
+              .appendSelectedIndexes(widget.draftIndex);
+        }else{
+          Provider.of<DraftImagesNotifier>(context, listen: false)
+              .removeAnIndexFromSelected(widget.draftIndex);
+        }
+      },
       onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (buildContext) => DocumentImagesGridScreen(
-                      id: widget.documentImage.docId,
-                      imageScreenActions: ImageScreenActions.fromDraft,
-                    )));
+        if (isSelected) {
+          if (!isCurrentSelected) {
+            Provider.of<DraftImagesNotifier>(context, listen: false)
+                .appendSelectedIndexes(widget.draftIndex);
+          } else {
+            Provider.of<DraftImagesNotifier>(context, listen: false)
+                .removeAnIndexFromSelected(widget.draftIndex);
+          }
+        } else {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (buildContext) => DocumentImagesGridScreen(
+                        id: widget.documentImage.docId,
+                        imageScreenActions: ImageScreenActions.fromDraft,
+                      )));
+        }
       },
       child: Card(
+        shadowColor: isCurrentSelected ? Colors.grey[500] : null,
+        elevation: isCurrentSelected ? 8.0 : 2.0,
         margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 6.0),
           height: 150.0,
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0)),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AspectRatio(
                   aspectRatio: 1 / 1.5,
                   child: Image(
-                      image:
-                          FileImage(File(widget.documentImage.imageFilePath)))),
+                    image: FileImage(File(widget.documentImage.imageFilePath)),
+                    fit: BoxFit.cover,
+                  )),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -62,37 +87,22 @@ class _DraftCardState extends State<DraftCard> {
                   ),
                 ),
               ),
-              PopupMenuButton(
-                icon: Icon(Icons.more_vert),
-                onSelected: popMenuFunctions,
-                itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                  const PopupMenuItem(
-                    value: 'retake',
-                    child: Text('Retake'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Text('Delete'),
-                  ),
-                ],
-              )
+              if (isSelected)
+                Checkbox(
+                    value: isCurrentSelected ? true : false,
+                    onChanged: (value) {
+                      if (isCurrentSelected) {
+                        Provider.of<DraftImagesNotifier>(context, listen: false)
+                            .removeAnIndexFromSelected(widget.draftIndex);
+                      } else {
+                        Provider.of<DraftImagesNotifier>(context, listen: false)
+                            .appendSelectedIndexes(widget.draftIndex);
+                      }
+                    })
             ],
           ),
         ),
       ),
     );
-  }
-
-  popMenuFunctions(result) async {
-    switch (result) {
-      case 'delete':
-        await Provider.of<DocumentsDatabaseNotifier>(context, listen: false)
-            .deleteDocument(widget.documentImage.docId);
-
-        break;
-
-      default:
-        break;
-    }
   }
 }

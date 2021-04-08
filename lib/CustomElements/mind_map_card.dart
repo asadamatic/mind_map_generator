@@ -1,18 +1,16 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:dialogs/ChoiceDialog/dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mind_map_generator/CustomChangeNotifiers/mind_map_images_notifier.dart';
 import 'package:mind_map_generator/DataModels/mind_map.dart';
-import 'package:mind_map_generator/LocalDatabaseService/document_database.dart';
-import 'package:mind_map_generator/LocalDatabaseService/mind_map_database.dart';
 import 'package:mind_map_generator/ImageViews/interactive_mind_map_view.dart';
 import 'package:provider/provider.dart';
 
 class MindMapCard extends StatefulWidget {
   final MindMap mindMap;
-  MindMapCard({this.mindMap});
+  final int imageIndex;
+  MindMapCard({this.mindMap, this.imageIndex});
   @override
   _MindMapCardState createState() => _MindMapCardState();
 }
@@ -20,28 +18,61 @@ class MindMapCard extends StatefulWidget {
 class _MindMapCardState extends State<MindMapCard> {
   @override
   Widget build(BuildContext context) {
+    final isSelected = Provider.of<MindMapImagesNotifier>(context)
+        .selectedMindMapIndexes
+        .isNotEmpty;
+    final isCurrentSelected = Provider.of<MindMapImagesNotifier>(context)
+        .selectedMindMapIndexes
+        .contains(widget.imageIndex);
+
     final String formattedDate =
         DateFormat.yMMMMEEEEd().format(DateTime.parse(widget.mindMap.docId));
     return InkWell(
+      onLongPress: () {
+        if (!isCurrentSelected) {
+          Provider.of<MindMapImagesNotifier>(context, listen: false)
+              .appendSelectedIndexes(widget.imageIndex);
+        }else{
+          Provider.of<MindMapImagesNotifier>(context, listen: false)
+              .removeAnIndexFromSelected(widget.imageIndex);
+        }
+      },
       onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (buildContext) => InteractiveMindMapView(
-                      mindMap: widget.mindMap,
-                    )));
+        if (isSelected) {
+          if (!isCurrentSelected) {
+            Provider.of<MindMapImagesNotifier>(context, listen: false)
+                .appendSelectedIndexes(widget.imageIndex);
+          }
+          {
+            Provider.of<MindMapImagesNotifier>(context, listen: false)
+                .removeAnIndexFromSelected(widget.imageIndex);
+          }
+        } else {
+          Provider.of<MindMapImagesNotifier>(context, listen: false)
+              .mindMapIndex = widget.imageIndex;
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (buildContext) => InteractiveMindMapView(
+                        mindMap: widget.mindMap,
+                      )));
+        }
       },
       child: Card(
+        shadowColor: isCurrentSelected ? Colors.grey[500] : null,
+        elevation: isCurrentSelected ? 8.0 : 2.0,
         margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
         child: Container(
           height: 150.0,
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0)),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AspectRatio(
                   aspectRatio: 1 / 1.5,
-                  child: Image(image: FileImage(File(widget.mindMap.imageFile)))),
+                  child: Image(
+                    image: FileImage(File(widget.mindMap.imageFile)),
+                    fit: BoxFit.cover,
+                  )),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -59,58 +90,24 @@ class _MindMapCardState extends State<MindMapCard> {
                   ),
                 ),
               ),
-              PopupMenuButton(
-                icon: Icon(Icons.more_vert),
-                onSelected: popUpFunction,
-                itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Text('Delete'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'deleteAll',
-                    child: Text('Delete with images'),
-                  ),
-                ],
-              )
+              if (isSelected)
+                Checkbox(
+                    value: isCurrentSelected ? true : false,
+                    onChanged: (value) {
+                      if (isCurrentSelected) {
+                        Provider.of<MindMapImagesNotifier>(context,
+                                listen: false)
+                            .removeAnIndexFromSelected(widget.imageIndex);
+                      } else {
+                        Provider.of<MindMapImagesNotifier>(context,
+                                listen: false)
+                            .appendSelectedIndexes(widget.imageIndex);
+                      }
+                    })
             ],
           ),
         ),
       ),
     );
-  }
-
-  void popUpFunction(result) {
-    showDialog(
-        context: context,
-        builder: (buildContext) => ChoiceDialog(
-              buttonOkText: 'Yes',
-              buttonOkOnPressed: () async {
-                switch (result) {
-                  case 'delete':
-                    await Provider.of<MindMapDatabaseNotifier>(context,
-                            listen: false)
-                        .deleteMinMap(widget.mindMap.docId);
-                    await Provider.of<DocumentsDatabaseNotifier>(context,
-                            listen: false)
-                        .updateDocumentStatus(widget.mindMap.docId, 0);
-
-                    break;
-
-                  case 'deleteAll':
-                    await Provider.of<MindMapDatabaseNotifier>(context,
-                            listen: false)
-                        .deleteMinMap(widget.mindMap.docId);
-                    await Provider.of<DocumentsDatabaseNotifier>(context,
-                            listen: false)
-                        .deleteDocument(widget.mindMap.docId);
-                    break;
-                  default:
-                    break;
-                }
-                Navigator.pop(buildContext);
-              },
-              buttonCancelOnPressed: () => Navigator.pop(buildContext),
-            ));
   }
 }

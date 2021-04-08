@@ -1,12 +1,8 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:mind_map_generator/CustomChangeNotifiers/document_images_notifier.dart';
 import 'package:mind_map_generator/DataModels/document_image.dart';
-import 'package:mind_map_generator/ImageService/image_service.dart';
 import 'package:mind_map_generator/ImageViews/interactive_image_view.dart';
-import 'package:mind_map_generator/LocalDatabaseService/document_database.dart';
 import 'package:provider/provider.dart';
 
 class ImageCard extends StatefulWidget {
@@ -22,154 +18,109 @@ class ImageCard extends StatefulWidget {
 class _ImageCardState extends State<ImageCard> {
   @override
   Widget build(BuildContext context) {
+    final isSelected = Provider.of<DocumentImagesNotifier>(context)
+        .selectedDocumentImagesIndexes
+        .isNotEmpty;
+    final isCurrentSelected = Provider.of<DocumentImagesNotifier>(context)
+        .selectedDocumentImagesIndexes
+        .contains(widget.imageIndex);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-      child: Stack(
+      padding: const EdgeInsets.all(0.0),
+      child: Column(
         children: [
-          Align(
-              alignment: Alignment.topRight,
-              child: PopupMenuButton(
-                icon: Icon(Icons.more_vert),
-                onSelected: (result) {
-                  popUpFunction(result);
-                },
-                itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                  const PopupMenuItem(
-                    value: 'retake',
-                    child: Text('Retake'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Text('Delete'),
-                  ),
-                ],
-              )),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Column(
+          Expanded(
+            flex: 3,
+            child: Stack(
+              fit: StackFit.expand,
               children: [
-                Expanded(
-                    child: AspectRatio(
-                  aspectRatio: 1 / 1.5,
+                Align(
+                  alignment: Alignment.center,
                   child: InkWell(
-                    child: Hero(
-                        tag: '${widget.imageDocument.imageId}',
-                        child: Image(
-                            image: FileImage(
-                                File(widget.imageDocument.imageFilePath)))),
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (buildContext) => InteractiveImageView(
-                                  documentImage: widget.imageDocument)));
+                    onLongPress: () {
+                      {
+                        if (!isCurrentSelected) {
+                          Provider.of<DocumentImagesNotifier>(context, listen: false)
+                              .appendSelectedIndexes(widget.imageIndex);
+                        } else {
+                          Provider.of<DocumentImagesNotifier>(context, listen: false)
+                              .removeAnIndexFromSelected(widget.imageIndex);
+                        }
+                      }
                     },
+                    onTap: () {
+                      if (isSelected) {
+                        if (!isCurrentSelected) {
+                          Provider.of<DocumentImagesNotifier>(context, listen: false)
+                              .appendSelectedIndexes(widget.imageIndex);
+                        } else {
+                          Provider.of<DocumentImagesNotifier>(context, listen: false)
+                              .removeAnIndexFromSelected(widget.imageIndex);
+                        }
+                      } else {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (buildContext) => InteractiveImageView(
+                                    documentImage: widget.imageDocument)));
+                      }
+                    },
+                    child: Card(
+                      shadowColor:
+                         isCurrentSelected
+                              ? Colors.grey[500]
+                              : null,
+                      elevation:
+                         isCurrentSelected
+                              ? 8.0
+                              : 0.0,
+                      child: Hero(
+                          tag: '${widget.imageDocument.imageId}',
+                          child: AspectRatio(
+                            aspectRatio: 1/1.5,
+                            child: Image(
+                              image:
+                                  FileImage(File(widget.imageDocument.imageFilePath)),
+                              fit: BoxFit.fill,
+                            ),
+                          )),
+                    ),
                   ),
-                )),
-                Text((widget.imageIndex + 1).toString()),
+                ),
+
+                if (isSelected)
+                  Align(
+                      alignment: Alignment.topRight,
+                      child: Checkbox(
+                        value: isCurrentSelected ? true : false,
+                        onChanged: (value) {
+
+                          if (isCurrentSelected) {
+                            Provider.of<DocumentImagesNotifier>(context, listen: false)
+                                .removeAnIndexFromSelected(widget.imageIndex);
+                          } else {
+                            Provider.of<DocumentImagesNotifier>(context, listen: false)
+                                .appendSelectedIndexes(widget.imageIndex);
+                          }
+
+                        },
+                      )),
               ],
+            ),
+          ),
+
+          Padding(
+            padding:
+            const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+            child: Text(
+              (widget.imageIndex + 1).toString(),
+              style: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16.0),
             ),
           ),
         ],
       ),
     );
-  }
-
-  void popUpFunction(result) async {
-    switch (result) {
-      case 'retake':
-        showModalBottomSheet(
-            context: context,
-            builder: (buildContext) {
-              return Container(
-                height: 200.0,
-                padding:
-                    const EdgeInsets.only(top: 15.0, left: 8.0, right: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Select an image of your documents!',
-                      style: Theme.of(context).textTheme.headline5,
-                    ),
-                    Divider(),
-                    Column(
-                      children: [
-                        InkWell(
-                          onTap: () async {
-                            final filePath = await ImageService().captureImage(
-                                imageSource: ImageSource.camera,
-                                buildContext: buildContext);
-
-                            if (filePath != null) {
-                              Navigator.pop(buildContext);
-                              Provider.of<DocumentsDatabaseNotifier>(context,
-                                      listen: false)
-                                  .updateDocumentImage(DocumentImage(
-                                      docId: widget.imageDocument.docId,
-                                      imageFilePath: filePath,
-                                      imageId: widget.imageDocument.imageId));
-                            }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Camera',
-                                    style:
-                                        Theme.of(context).textTheme.headline6),
-                                FaIcon(
-                                  FontAwesomeIcons.cameraRetro,
-                                )
-                              ],
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () async {
-                            final filePath = await ImageService().captureImage(
-                                imageSource: ImageSource.gallery,
-                                buildContext: buildContext);
-
-                            if (filePath != null) {
-                              Navigator.pop(buildContext);
-                              Provider.of<DocumentsDatabaseNotifier>(context,
-                                      listen: false)
-                                  .updateDocumentImage(DocumentImage(
-                                      docId: widget.imageDocument.docId,
-                                      imageFilePath: filePath,
-                                      imageId: widget.imageDocument.imageId));
-                            }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Gallery',
-                                  style: Theme.of(context).textTheme.headline6,
-                                ),
-                                FaIcon(FontAwesomeIcons.photoVideo)
-                              ],
-                            ),
-                          ),
-                        )
-                      ],
-                    )
-                  ],
-                ),
-              );
-            });
-        break;
-
-      case 'delete':
-        Provider.of<DocumentsDatabaseNotifier>(context, listen: false)
-            .deleteDocumentImage(widget.imageDocument.imageId);
-        break;
-      default:
-        break;
-    }
   }
 }

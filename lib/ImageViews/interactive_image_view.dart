@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:mind_map_generator/CustomElements/image_card.dart';
 import 'package:mind_map_generator/DataModels/document_image.dart';
 
 class InteractiveImageView extends StatelessWidget {
