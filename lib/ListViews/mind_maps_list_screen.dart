@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mind_map_generator/CustomChangeNotifiers/connection_change_notifier.dart';
 import 'package:mind_map_generator/CustomChangeNotifiers/mind_map_images_notifier.dart';
+import 'package:mind_map_generator/CustomChangeNotifiers/server_config_notifier.dart';
 import 'package:mind_map_generator/CustomElements/mind_map_card.dart';
 import 'package:mind_map_generator/ListViews/document_drafts.dart';
 import 'dart:io';
@@ -31,25 +31,22 @@ class _MindMapsListScreenState extends State<MindMapsListScreen> {
         .isNotEmpty;
 
     hostEditingController = TextEditingController(
-        text:
-            Provider.of<ConnectionChangeNotifier>(context, listen: false).ipv4);
+        text: Provider.of<ServerConfigNotifier>(context).host);
 
     portEditingController = TextEditingController(
-        text:
-            Provider.of<ConnectionChangeNotifier>(context, listen: false).port);
+        text: Provider.of<ServerConfigNotifier>(context).port);
     return GestureDetector(
       onTap: () {
         Provider.of<MindMapImagesNotifier>(context, listen: false)
             .removeAllSelectedIndexes();
       },
       child: WillPopScope(
-        onWillPop: () async{
-
-          if (isSelected){
-
-            Provider.of<MindMapImagesNotifier>(context, listen: false).removeAllSelectedIndexes();
+        onWillPop: () async {
+          if (isSelected) {
+            Provider.of<MindMapImagesNotifier>(context, listen: false)
+                .removeAllSelectedIndexes();
             return false;
-          }else{
+          } else {
             return true;
           }
         },
@@ -81,8 +78,12 @@ class _MindMapsListScreenState extends State<MindMapsListScreen> {
                                         MainAxisAlignment.spaceAround,
                                     children: [
                                       Padding(
-                                        padding: const EdgeInsets.only(bottom: 8.0),
-                                        child: Text('Server Config', style: TextStyle(fontSize: 18.0),),
+                                        padding:
+                                            const EdgeInsets.only(bottom: 8.0),
+                                        child: Text(
+                                          'Server Config',
+                                          style: TextStyle(fontSize: 18.0),
+                                        ),
                                       ),
                                       TextFormField(
                                         controller: hostEditingController,
@@ -92,7 +93,8 @@ class _MindMapsListScreenState extends State<MindMapsListScreen> {
                                       ),
                                       Expanded(
                                         child: Padding(
-                                          padding: const EdgeInsets.only(top: 8.0),
+                                          padding:
+                                              const EdgeInsets.only(top: 8.0),
                                           child: Row(
                                             children: [
                                               Expanded(
@@ -103,13 +105,15 @@ class _MindMapsListScreenState extends State<MindMapsListScreen> {
                                                     ),
                                                     textColor: Theme.of(context)
                                                         .primaryColor,
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                            vertical: 0.0),
+                                                    padding: const EdgeInsets
+                                                            .symmetric(
+                                                        vertical: 0.0),
                                                     color: Colors.white,
-                                                    shape: RoundedRectangleBorder(
+                                                    shape:
+                                                        RoundedRectangleBorder(
                                                       borderRadius:
-                                                          BorderRadius.circular(10.0),
+                                                          BorderRadius.circular(
+                                                              10.0),
                                                     ),
                                                     onPressed: () {
                                                       Navigator.pop(context);
@@ -123,26 +127,20 @@ class _MindMapsListScreenState extends State<MindMapsListScreen> {
                                                       'Done',
                                                     ),
                                                     textColor: Colors.white,
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                            vertical: 0.0),
+                                                    padding: const EdgeInsets
+                                                            .symmetric(
+                                                        vertical: 0.0),
                                                     color: Theme.of(context)
                                                         .primaryColor,
-                                                    shape: RoundedRectangleBorder(
+                                                    shape:
+                                                        RoundedRectangleBorder(
                                                       borderRadius:
-                                                          BorderRadius.circular(10.0),
+                                                          BorderRadius.circular(
+                                                              10.0),
                                                     ),
                                                     onPressed: () {
-                                                      Provider.of<ConnectionChangeNotifier>(
-                                                              context,
-                                                              listen: false)
-                                                          .change(
-                                                              hostEditingController
-                                                                  .text
-                                                                  .trim(),
-                                                              portEditingController
-                                                                  .text
-                                                                  .trim());
+
+                                                      Provider.of<ServerConfigNotifier>(context, listen: false).setServerConfigValues(hostEditingController.text.trim(), portEditingController.text.trim());
                                                       Navigator.pop(context);
                                                     },
                                                   )),
@@ -170,9 +168,15 @@ class _MindMapsListScreenState extends State<MindMapsListScreen> {
                   ]
                 : [
                     Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.only(right: 8.0),
                       child: TextButton(
-                        child: Text('Drafts', style: TextStyle(color: Colors.white, fontSize: 16.0,),),
+                        child: Text(
+                          'Drafts',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.0,
+                          ),
+                        ),
                         onPressed: () {
                           Navigator.push(
                               context,

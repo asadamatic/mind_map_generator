@@ -1,6 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mind_map_generator/DataModels/document_image.dart';
+import 'package:mind_map_generator/ImageService/image_service.dart';
 import 'package:mind_map_generator/LocalDatabaseService/document_database.dart';
+import 'package:share/share.dart';
 
 class DocumentImagesNotifier extends ChangeNotifier {
   List<DocumentImage> _documentImages = [];
@@ -94,4 +100,47 @@ class DocumentImagesNotifier extends ChangeNotifier {
     _selectedDocumentImagesIndexes.remove(removeIndex);
     notifyListeners();
   }
+
+  shareSelected(String directoryPath) {
+    List<String> shareFiles = [];
+    for (int index in _selectedDocumentImagesIndexes) {
+      shareFiles.add(directoryPath + _documentImages[index].imageFilePath);
+    }
+    Share.shareFiles(shareFiles);
+  }
+
+  getDocumentImage(
+      String id, BuildContext buildContext, ImageSource imageSource) async {
+    final filePath = await ImageService()
+        .captureImage(imageSource: imageSource, buildContext: buildContext);
+
+    if (filePath != null) {
+      Navigator.pop(buildContext);
+      append(DocumentImage(
+          docId: id,
+          imageFilePath: filePath,
+          imageId: DateTime.now().microsecondsSinceEpoch.toString(),
+          status: 0));
+    }
+  }
+
+  updateDocumentImage(BuildContext buildContext,
+      BuildContext bottomSheetContext, ImageSource imageSource) async {
+    final filePath = await ImageService()
+        .captureImage(imageSource: imageSource, buildContext: buildContext);
+
+    if (filePath != null) {
+      Navigator.pop(bottomSheetContext);
+      update(filePath);
+    }
+  }
+
+  Future<List<String>> getBase64EncodedList(String directoryPath) {
+    return Future.wait(_documentImages.map((documentImage) async {
+      final file = File(directoryPath + documentImage.imageFilePath);
+      final bytes = await file.readAsBytes();
+      return base64Encode(bytes);
+    }).toList());
+  }
+
 }

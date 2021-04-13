@@ -4,13 +4,26 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ImageService {
   final _imagePicker = ImagePicker();
   ImageService();
 
-  Future<File> captureDocument(
+  static Future<String> savePickedImageToAppFolder(File image) async {
+    final Directory directory = await getApplicationDocumentsDirectory();
+    String relativePath =
+        '/' + DateTime.now().millisecondsSinceEpoch.toString() + '.jpeg';
+
+    String newPath = directory.path + relativePath;
+
+    File res = await image.copy(newPath);
+
+    return res != null && res.existsSync() ? relativePath : null;
+  }
+
+  Future<String> captureImage(
       {ImageSource imageSource, BuildContext buildContext}) async {
     File file;
 
@@ -22,58 +35,10 @@ class ImageService {
     if (status == PermissionStatus.granted) {
       final PickedFile pickedFile =
           await _imagePicker.getImage(source: imageSource);
-      // final Uint8List bytes = await pickedFile.readAsBytes();
       if (pickedFile != null) {
-        file = File(pickedFile.path);
-
+        file = await cropImage(pickedFile);
         if (file != null) {
-          return file;
-        } else {
-          Navigator.pop(buildContext);
-          return null;
-        }
-      } else {
-        Navigator.pop(buildContext);
-        return null;
-      }
-    } else if (status == PermissionStatus.denied ||
-        status == PermissionStatus.undetermined ||
-        status == PermissionStatus.restricted) {
-      await permission.request();
-      Navigator.of(buildContext).pop();
-    } else {
-      showDialog(
-          context: buildContext,
-          builder: (buildContext) => MessageDialog(
-                message:
-                    'This app requires camera & storage access to function properly',
-                buttonOkText: 'Open Settings',
-                buttonOkOnPressed: () => openAppSettings(),
-              ));
-    }
-    return file;
-  }
-
-  Future<String> captureImage(
-      {ImageSource imageSource, BuildContext buildContext}) async {
-    String filePath;
-
-    final permission = imageSource == ImageSource.camera
-        ? Permission.camera
-        : Permission.storage;
-    final PermissionStatus status = await permission.status;
-
-    if (status == PermissionStatus.granted) {
-      final PickedFile pickedFile =
-          await _imagePicker.getImage(source: imageSource);
-      // final Uint8List bytes = await pickedFile.readAsBytes();
-      if (pickedFile != null) {
-        filePath = await cropImage(pickedFile);
-        if (filePath != null) {
-          return filePath;
-          // final bytes = await file.readAsBytes();
-          // final base64encodedImage = base64Encode(bytes);
-          // return base64encodedImage;
+          return savePickedImageToAppFolder(file);
         } else {
           Navigator.pop(buildContext);
           return null;
@@ -98,21 +63,22 @@ class ImageService {
               ));
     }
 
-    //  final bytes = await file.readAsBytes();
-    // final base64encodedImage = base64Encode(bytes);
-    return filePath;
+    return savePickedImageToAppFolder(file);
   }
 
-  Future<String> cropImage(PickedFile pickedFile) async {
+  Future<File> cropImage(PickedFile pickedFile) async {
     final file = await ImageCropper.cropImage(
         sourcePath: File(pickedFile.path).path,
         androidUiSettings: const AndroidUiSettings(
-            toolbarTitle: 'Cropper', lockAspectRatio: false,
+          toolbarTitle: 'Cropper',
+          lockAspectRatio: false,
         ),
-        iosUiSettings:
-            const IOSUiSettings(aspectRatioLockEnabled: false, minimumAspectRatio: 1.0, title: 'Cropper'));
+        iosUiSettings: const IOSUiSettings(
+            aspectRatioLockEnabled: false,
+            minimumAspectRatio: 1.0,
+            title: 'Cropper'));
 
-    return file.path;
+    return file;
   }
   // Future<String> getCroppedImage() async {
   //   String imagePath;

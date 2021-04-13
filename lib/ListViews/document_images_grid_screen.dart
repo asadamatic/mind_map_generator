@@ -1,14 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mind_map_generator/CustomChangeNotifiers/document_images_notifier.dart';
-import 'package:mind_map_generator/DataModels/document_image.dart';
-import 'package:mind_map_generator/ImageService/image_service.dart';
 import 'package:mind_map_generator/CustomElements/image_card.dart';
 import 'package:mind_map_generator/mind_map_generator_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:share/share.dart';
 
 enum ImageScreenActions { newDocument, fromDraft, fromMindMap }
 
@@ -31,7 +29,7 @@ class _DocumentImagesGridScreenState extends State<DocumentImagesGridScreen> {
     super.initState();
 
     if (widget.imageScreenActions == ImageScreenActions.newDocument) {
-      id = DateTime.now().toString();
+      id = DateTime.now().microsecondsSinceEpoch.toString();
     } else if (widget.imageScreenActions == ImageScreenActions.fromMindMap ||
         widget.imageScreenActions == ImageScreenActions.fromDraft) {
       id = widget.id;
@@ -40,6 +38,7 @@ class _DocumentImagesGridScreenState extends State<DocumentImagesGridScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final String directoryPath = Provider.of<Directory>(context).path;
     return ChangeNotifierProvider.value(
         value: DocumentImagesNotifier(docId: id),
         builder: (buildContext, child) {
@@ -81,6 +80,14 @@ class _DocumentImagesGridScreenState extends State<DocumentImagesGridScreen> {
                     actions: isSelected
                         ? [
                             IconButton(
+                                icon: Icon(Icons.share),
+                                onPressed: () {
+                                  Provider.of<DocumentImagesNotifier>(
+                                          buildContext,
+                                          listen: false)
+                                      .shareSelected(directoryPath);
+                                }),
+                            IconButton(
                                 icon: Icon(Icons.delete),
                                 onPressed: () {
                                   Provider.of<DocumentImagesNotifier>(
@@ -116,23 +123,14 @@ class _DocumentImagesGridScreenState extends State<DocumentImagesGridScreen> {
                                                   children: [
                                                     InkWell(
                                                       onTap: () async {
-                                                        final filePath =
-                                                            await ImageService()
-                                                                .captureImage(
-                                                                    imageSource:
-                                                                        ImageSource
-                                                                            .camera,
-                                                                    buildContext:
-                                                                        buildContext);
-
-                                                        if (filePath != null) {
-                                                          Navigator.pop(
-                                                              bottomSheetContext);
-                                                          Provider.of<DocumentImagesNotifier>(
-                                                                  buildContext,
-                                                                  listen: false)
-                                                              .update(filePath);
-                                                        }
+                                                        Provider.of<DocumentImagesNotifier>(
+                                                                buildContext,
+                                                                listen: false)
+                                                            .updateDocumentImage(
+                                                                buildContext,
+                                                                bottomSheetContext,
+                                                                ImageSource
+                                                                    .camera);
                                                       },
                                                       child: Padding(
                                                         padding:
@@ -158,23 +156,14 @@ class _DocumentImagesGridScreenState extends State<DocumentImagesGridScreen> {
                                                     ),
                                                     InkWell(
                                                       onTap: () async {
-                                                        final filePath =
-                                                            await ImageService()
-                                                                .captureImage(
-                                                                    imageSource:
-                                                                        ImageSource
-                                                                            .gallery,
-                                                                    buildContext:
-                                                                        buildContext);
-
-                                                        if (filePath != null) {
-                                                          Navigator.pop(
-                                                              bottomSheetContext);
-                                                          Provider.of<DocumentImagesNotifier>(
-                                                                  buildContext,
-                                                                  listen: false)
-                                                              .update(filePath);
-                                                        }
+                                                        Provider.of<DocumentImagesNotifier>(
+                                                                buildContext,
+                                                                listen: false)
+                                                            .updateDocumentImage(
+                                                                buildContext,
+                                                                bottomSheetContext,
+                                                                ImageSource
+                                                                    .gallery);
                                                       },
                                                       child: Padding(
                                                         padding:
@@ -207,28 +196,46 @@ class _DocumentImagesGridScreenState extends State<DocumentImagesGridScreen> {
                                         });
                                   }),
                           ]
-                        : []),
-                body: Consumer<DocumentImagesNotifier>(
-                  builder: (context, value, child) {
-                    if (value != null) {
-                      return GridView.builder(
-                          itemCount: value.documentImages?.length ?? 0,
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount:
-                                      (MediaQuery.of(context).orientation ==
-                                              Orientation.portrait)
-                                          ? 2
-                                          : 3),
-                          itemBuilder: (context, index) {
-                            return ImageCard(
-                                imageDocument: value.documentImages[index],
-                                imageIndex: index);
-                          });
-                    }
+                        : [
+                            IconButton(
+                                icon: Icon(Icons.share),
+                                onPressed: () {
+                                  Share.shareFiles(
+                                      Provider.of<DocumentImagesNotifier>(
+                                              buildContext,
+                                              listen: false)
+                                          .documentImagePaths
+                                          .map((e) =>
+                                              File(directoryPath.toString() + e)
+                                                  .path)
+                                          .toList(),
+                                      text: '');
+                                }),
+                          ]),
+                body: Padding(
+                  padding: const EdgeInsets.only(top: 12.0),
+                  child: Consumer<DocumentImagesNotifier>(
+                    builder: (context, value, child) {
+                      if (value != null) {
+                        return GridView.builder(
+                            itemCount: value.documentImages?.length ?? 0,
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount:
+                                        (MediaQuery.of(context).orientation ==
+                                                Orientation.portrait)
+                                            ? 2
+                                            : 3),
+                            itemBuilder: (context, index) {
+                              return ImageCard(
+                                  imageDocument: value.documentImages[index],
+                                  imageIndex: index);
+                            });
+                      }
 
-                    return Center();
-                  },
+                      return Center();
+                    },
+                  ),
                 ),
                 floatingActionButton: FloatingButtons(
                   id: id,
@@ -241,7 +248,6 @@ class _DocumentImagesGridScreenState extends State<DocumentImagesGridScreen> {
   }
 }
 
-// ignore: must_be_immutable
 class FloatingButtons extends StatelessWidget {
   final ImageScreenActions imageScreenActions;
   FloatingButtons(
@@ -252,6 +258,7 @@ class FloatingButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final directoryPath = Provider.of<Directory>(context).path;
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -275,15 +282,10 @@ class FloatingButtons extends StatelessWidget {
                     style: TextStyle(fontSize: 18.0),
                   )));
                 } else {
-                  final images = await Future.wait(
-                      Provider.of<DocumentImagesNotifier>(context,
+                  final images = await Provider.of<DocumentImagesNotifier>(
+                          context,
                           listen: false)
-                          .documentImages
-                          .map((documentImage) async {
-                        final file = File(documentImage.imageFilePath);
-                        final bytes = await file.readAsBytes();
-                        return base64Encode(bytes);
-                      }));
+                      .getBase64EncodedList(directoryPath);
                   if (imageScreenActions == ImageScreenActions.fromDraft ||
                       imageScreenActions == ImageScreenActions.newDocument) {
                     Navigator.pushReplacement(
@@ -338,24 +340,10 @@ class FloatingButtons extends StatelessWidget {
                             children: [
                               InkWell(
                                 onTap: () async {
-                                  final filePath = await ImageService()
-                                      .captureImage(
-                                          imageSource: ImageSource.camera,
-                                          buildContext: buildContext);
-
-                                  if (filePath != null) {
-                                    Navigator.pop(buildContext);
-                                    await Provider.of<DocumentImagesNotifier>(
-                                            context,
-                                            listen: false)
-                                        .append(
-                                      DocumentImage(
-                                          docId: id,
-                                          imageFilePath: filePath,
-                                          imageId: DateTime.now().toString(),
-                                          status: 0),
-                                    );
-                                  }
+                                  Provider.of<DocumentImagesNotifier>(context,
+                                          listen: false)
+                                      .getDocumentImage(
+                                          id, buildContext, ImageSource.camera);
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
@@ -376,24 +364,10 @@ class FloatingButtons extends StatelessWidget {
                               ),
                               InkWell(
                                 onTap: () async {
-                                  final filePath = await ImageService()
-                                      .captureImage(
-                                          imageSource: ImageSource.gallery,
-                                          buildContext: buildContext);
-
-                                  if (filePath != null) {
-                                    Navigator.pop(buildContext);
-                                    await Provider.of<DocumentImagesNotifier>(
-                                            context,
-                                            listen: false)
-                                        .append(
-                                      DocumentImage(
-                                          docId: id,
-                                          imageFilePath: filePath,
-                                          imageId: DateTime.now().toString(),
-                                          status: 0),
-                                    );
-                                  }
+                                  Provider.of<DocumentImagesNotifier>(context,
+                                          listen: false)
+                                      .getDocumentImage(id, buildContext,
+                                          ImageSource.gallery);
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),

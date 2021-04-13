@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mind_map_generator/Constants/functions.dart';
 import 'package:mind_map_generator/CustomChangeNotifiers/draft_Images_notifier.dart';
 import 'package:mind_map_generator/DataModels/document_image.dart';
 import 'package:mind_map_generator/ListViews/document_images_grid_screen.dart';
@@ -18,6 +19,7 @@ class DraftCard extends StatefulWidget {
 class _DraftCardState extends State<DraftCard> {
   @override
   Widget build(BuildContext context) {
+    final imageFile = Provider.of<Directory>(context).path + widget.documentImage.imageFilePath;
     final isSelected = Provider.of<DraftImagesNotifier>(context)
         .selectedDraftIndexes
         .isNotEmpty;
@@ -25,7 +27,7 @@ class _DraftCardState extends State<DraftCard> {
         .selectedDraftIndexes
         .contains(widget.draftIndex);
     final String formattedDate = DateFormat.yMMMMEEEEd()
-        .format(DateTime.parse(widget.documentImage.docId));
+        .format(DateTime.parse(DateTime.fromMicrosecondsSinceEpoch(int.parse(widget.documentImage.docId)).toString()));
     return InkWell(
       onLongPress: () {
         if (!isCurrentSelected) {
@@ -67,9 +69,11 @@ class _DraftCardState extends State<DraftCard> {
               AspectRatio(
                   aspectRatio: 1 / 1.5,
                   child: Image(
-                    image: FileImage(File(widget.documentImage.imageFilePath)),
-                    fit: BoxFit.cover,
-                  )),
+                            image: FileImage(File(imageFile)),
+                            fit: BoxFit.cover,
+                          )
+
+                  ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(

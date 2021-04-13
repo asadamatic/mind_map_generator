@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:mind_map_generator/CustomChangeNotifiers/connection_change_notifier.dart';
 import 'package:mind_map_generator/CustomChangeNotifiers/mind_map_images_notifier.dart';
+import 'package:mind_map_generator/CustomChangeNotifiers/server_config_notifier.dart';
 import 'package:mind_map_generator/DataModels/mind_map.dart';
 import 'package:mind_map_generator/LocalDatabaseService/document_database.dart';
 import 'package:mind_map_generator/NetworkService/network_service.dart';
@@ -31,10 +32,11 @@ class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final directoryPath = Provider.of<Directory>(context).path;
     final ipv4 =
-        Provider.of<ConnectionChangeNotifier>(context, listen: false).ipv4;
+        Provider.of<ServerConfigNotifier>(context, listen: false).host;
     final port =
-        Provider.of<ConnectionChangeNotifier>(context, listen: false).port;
+        Provider.of<ServerConfigNotifier>(context, listen: false).port;
     return Scaffold(
       appBar: AppBar(
         title: Text('Mind Map'),
@@ -48,7 +50,6 @@ class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
                     .generateMindMap(widget.base64EncodedImages, widget.docId),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            final File imageFile = File(snapshot.data.imageFile);
 
             return Column(
               children: [
@@ -58,7 +59,7 @@ class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
                       padding: const EdgeInsets.all(8.0),
                       child: AspectRatio(
                         aspectRatio: 1 / 1.5,
-                        child: Image(image: FileImage(imageFile)),
+                        child: Image(image: FileImage(File(Provider.of<Directory>(context).path + snapshot.data.imageFile))),
                       ),
                     ),
                   ),
@@ -116,7 +117,7 @@ class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
                                       .append(snapshot.data);
 
                                   await GallerySaver.saveImage(
-                                      snapshot.data.imageFile);
+                                      directoryPath + snapshot.data.imageFile);
                                 } else if (widget.mapScreenActions ==
                                         MindMapGeneratorScreenActions.update ||
                                     widget.mapScreenActions ==
@@ -126,7 +127,7 @@ class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
                                           listen: false)
                                       .updateMindMap(snapshot.data);
                                   await GallerySaver.saveImage(
-                                      snapshot.data.imageFile);
+                                      directoryPath + snapshot.data.imageFile);
                                 }
 
                                 DocumentsDatabaseNotifier()

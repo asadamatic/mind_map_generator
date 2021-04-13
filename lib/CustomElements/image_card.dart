@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mind_map_generator/CustomChangeNotifiers/document_images_notifier.dart';
 import 'package:mind_map_generator/DataModels/document_image.dart';
-import 'package:mind_map_generator/ImageViews/interactive_image_view.dart';
+import 'package:mind_map_generator/ImageViews/images_sllider.dart';
 import 'package:provider/provider.dart';
 
 class ImageCard extends StatefulWidget {
@@ -18,12 +18,14 @@ class ImageCard extends StatefulWidget {
 class _ImageCardState extends State<ImageCard> {
   @override
   Widget build(BuildContext context) {
+    final imageFile = Provider.of<Directory>(context).path + widget.imageDocument.imageFilePath;
     final isSelected = Provider.of<DocumentImagesNotifier>(context)
         .selectedDocumentImagesIndexes
         .isNotEmpty;
     final isCurrentSelected = Provider.of<DocumentImagesNotifier>(context)
         .selectedDocumentImagesIndexes
         .contains(widget.imageIndex);
+    final documentImages = Provider.of<DocumentImagesNotifier>(context).documentImages;
     return Padding(
       padding: const EdgeInsets.all(0.0),
       child: Column(
@@ -60,8 +62,8 @@ class _ImageCardState extends State<ImageCard> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (buildContext) => InteractiveImageView(
-                                    documentImage: widget.imageDocument)));
+                                builder: (buildContext) => ImagesSlider(startIndex: widget.imageIndex,
+                                    documentImages: documentImages,)));
                       }
                     },
                     child: Card(
@@ -78,10 +80,9 @@ class _ImageCardState extends State<ImageCard> {
                           child: AspectRatio(
                             aspectRatio: 1/1.5,
                             child: Image(
-                              image:
-                                  FileImage(File(widget.imageDocument.imageFilePath)),
-                              fit: BoxFit.fill,
-                            ),
+                                      image: FileImage(File(imageFile)),
+                                      fit: BoxFit.fill,
+                                    )
                           )),
                     ),
                   ),
@@ -123,4 +124,5 @@ class _ImageCardState extends State<ImageCard> {
       ),
     );
   }
+
 }

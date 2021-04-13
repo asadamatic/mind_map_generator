@@ -32,9 +32,9 @@ class _MindMapEditingScreenState extends State<MindMapEditingScreen> {
     controllers = [
       for (int index = 0; index < widget.listOfData.length; index++)
         index == 0
-            ? TextEditingController(text: widget.listOfData[index].toString())
+            ? TextEditingController(text: widget.listOfData[index].toString().trim())
             : TextEditingController(
-            text: widget.listOfData[index].toString()?.split('+-')[1])
+            text: widget.listOfData[index].toString()?.split('+-')[1].trim())
     ];
   }
 
@@ -52,7 +52,7 @@ class _MindMapEditingScreenState extends State<MindMapEditingScreen> {
                 PageTransition(
                     type: PageTransitionType.leftToRightWithFade,
                     child: InteractiveMindMapView(
-                      mindMap: widget.mindMap,
+                      oldMindMap: widget.mindMap,
                     )));
           },
         ),
@@ -68,6 +68,7 @@ class _MindMapEditingScreenState extends State<MindMapEditingScreen> {
                   border: InputBorder.none,
                 ),
                 style: getTextStyle(widget.listOfData[index].toString()),
+
               ),
               trailing: IconButton(
                 icon: Icon(Icons.delete),
@@ -103,13 +104,15 @@ class _MindMapEditingScreenState extends State<MindMapEditingScreen> {
 
   TextStyle getTextStyle(String data) {
     if (data.toString().split('+-')[0] == '') {
-      return TextStyle(fontWeight: FontWeight.bold, fontSize: 19.0);
+      return TextStyle( fontSize: 20.0);
     } else if (data.toString().split('+-')[0] == '+') {
-      return TextStyle(fontWeight: FontWeight.w700, fontSize: 17.0);
+      return TextStyle(fontSize: 19.0);
     } else if (data.toString().split('+-')[0] == '++') {
-      return TextStyle(fontWeight: FontWeight.w500, fontSize: 15.0);
+      return TextStyle( fontSize: 18.0);
     } else if (data.toString().split('+-')[0] == '+++') {
-      return TextStyle(fontWeight: FontWeight.w300, fontSize: 14.0);
+      return TextStyle(fontSize: 17.0);
+    }else{
+      return TextStyle(fontWeight: FontWeight.bold, fontSize: 22.0);
     }
 
     return TextStyle();

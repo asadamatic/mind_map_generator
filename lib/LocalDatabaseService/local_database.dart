@@ -2,7 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class LocalDatabase {
-  static const _databaseName = 'newoldnew.db';
+  static const _databaseName = 'final_app_database.db';
   static Database _database;
 
   Future<Database> get database async {

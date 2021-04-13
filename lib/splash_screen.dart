@@ -36,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 35.0),
                 child: Text(
-                  'Mind Maps',
+                  'SMART MATTER INC',
                   style: TextStyle(
                       fontSize: 24.0,
                       color: Theme.of(context).primaryColor),

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
 import 'package:mind_map_generator/DataModels/mind_map.dart';
 import 'package:path_provider/path_provider.dart';
@@ -21,15 +22,18 @@ class NetworkService {
     );
     Map<String, dynamic> responseJson = jsonDecode(response.body);
 
-    final directory = await getApplicationDocumentsDirectory();
-    final File file = File(directory.path + '/$id' + DateTime.now().toString() + '.jpeg');
+    final Directory directory = await getApplicationDocumentsDirectory();
+
+    String relativePath = '/' + DateTime.now().millisecondsSinceEpoch.toString() + '.jpeg';
+
+    File file = File('${directory.path}' + relativePath);
 
     await file.writeAsBytes(base64Decode(responseJson['encoded_mind_map']));
 
-
+    print(file.path);
     return MindMap(
         docId: id,
-        imageFile: file.path,
+        imageFile: relativePath,
         name: responseJson['name'],
         text: jsonEncode(responseJson['text']));
   }
@@ -45,15 +49,15 @@ class NetworkService {
     );
     Map<String, dynamic> responseJson = jsonDecode(response.body);
 
-    final directory = await getApplicationDocumentsDirectory();
+    final Directory directory = await getApplicationDocumentsDirectory();
 
-    final File file = File(directory.path + '/$id' + '.jpeg');
+    String relativePath = '/' + DateTime.now().millisecondsSinceEpoch.toString() + '.jpeg';
+    File file = File('${directory.path}' + relativePath);
 
     await file.writeAsBytes(base64Decode(responseJson['encoded_imgs']));
-
     return MindMap(
         docId: id,
-        imageFile: file.path,
+        imageFile: relativePath,
         name: responseJson['name'],
         text: jsonEncode(responseJson['text']));
   }

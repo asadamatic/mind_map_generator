@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mind_map_generator/Constants/functions.dart';
 import 'package:mind_map_generator/CustomChangeNotifiers/mind_map_images_notifier.dart';
 import 'package:mind_map_generator/DataModels/mind_map.dart';
 import 'package:mind_map_generator/ImageViews/interactive_mind_map_view.dart';
@@ -18,6 +19,8 @@ class MindMapCard extends StatefulWidget {
 class _MindMapCardState extends State<MindMapCard> {
   @override
   Widget build(BuildContext context) {
+    final imageFile = Provider.of<Directory>(context).path +
+        widget.mindMap.imageFile;
     final isSelected = Provider.of<MindMapImagesNotifier>(context)
         .selectedMindMapIndexes
         .isNotEmpty;
@@ -26,13 +29,13 @@ class _MindMapCardState extends State<MindMapCard> {
         .contains(widget.imageIndex);
 
     final String formattedDate =
-        DateFormat.yMMMMEEEEd().format(DateTime.parse(widget.mindMap.docId));
+        DateFormat.yMMMMEEEEd().format(DateTime.parse(DateTime.fromMicrosecondsSinceEpoch(int.parse(widget.mindMap.docId)).toString()));
     return InkWell(
       onLongPress: () {
         if (!isCurrentSelected) {
           Provider.of<MindMapImagesNotifier>(context, listen: false)
               .appendSelectedIndexes(widget.imageIndex);
-        }else{
+        } else {
           Provider.of<MindMapImagesNotifier>(context, listen: false)
               .removeAnIndexFromSelected(widget.imageIndex);
         }
@@ -42,7 +45,7 @@ class _MindMapCardState extends State<MindMapCard> {
           if (!isCurrentSelected) {
             Provider.of<MindMapImagesNotifier>(context, listen: false)
                 .appendSelectedIndexes(widget.imageIndex);
-          }
+          } else
           {
             Provider.of<MindMapImagesNotifier>(context, listen: false)
                 .removeAnIndexFromSelected(widget.imageIndex);
@@ -54,7 +57,7 @@ class _MindMapCardState extends State<MindMapCard> {
               context,
               MaterialPageRoute(
                   builder: (buildContext) => InteractiveMindMapView(
-                        mindMap: widget.mindMap,
+                        oldMindMap: widget.mindMap,
                       )));
         }
       },
@@ -70,7 +73,7 @@ class _MindMapCardState extends State<MindMapCard> {
               AspectRatio(
                   aspectRatio: 1 / 1.5,
                   child: Image(
-                    image: FileImage(File(widget.mindMap.imageFile)),
+                    image: FileImage(File(imageFile)),
                     fit: BoxFit.cover,
                   )),
               Expanded(

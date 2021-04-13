@@ -53,24 +53,27 @@ class _DraftsListScreenState extends State<DraftsListScreen> {
                             })
                     ],
                   ),
-                  body: Consumer<DraftImagesNotifier>(
-                    builder: (context, value, child) {
-                      if (value != null) {
-                        return ListView.builder(
-                            itemCount: value.draftDocuments?.length ?? 0,
-                            itemBuilder: (context, index) {
-                              if (mindMapDocIds
-                                  .contains(value.draftDocuments[index].docId)) {
-                                return SizedBox();
-                              }
-                              return DraftCard(
-                                documentImage: value.draftDocuments[index],
-                                draftIndex: index,
-                              );
-                            });
-                      }
-                      return Center();
-                    },
+                  body: Padding(
+                    padding: const EdgeInsets.only(top: 12.0),
+                    child: Consumer<DraftImagesNotifier>(
+                      builder: (context, value, child) {
+                        if (value != null) {
+                          return ListView.builder(
+                              itemCount: value.draftDocuments?.length ?? 0,
+                              itemBuilder: (context, index) {
+                                if (mindMapDocIds
+                                    .contains(value.draftDocuments[index].docId)) {
+                                  return SizedBox();
+                                }
+                                return DraftCard(
+                                  documentImage: value.draftDocuments[index],
+                                  draftIndex: index,
+                                );
+                              });
+                        }
+                        return Center();
+                      },
+                    ),
                   )),
             ));
       },

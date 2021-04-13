@@ -7,7 +7,8 @@ class MindMapImagesNotifier extends ChangeNotifier {
   List<String> _mindMapDocIds = [];
   List<int> _selectedMindMapIndexes = [];
 
-  int mindMapIndex;
+  int _mindMapIndex;
+  int get mindMapIndex => _mindMapIndex;
   List<MindMap> get mindMaps => _mindMaps;
   List<String> get mindMapDocIds => _mindMapDocIds;
   List<int> get selectedMindMapIndexes => _selectedMindMapIndexes;
@@ -26,7 +27,10 @@ class MindMapImagesNotifier extends ChangeNotifier {
     _selectedMindMapIndexes = newSelectedMindMaps;
     notifyListeners();
   }
-
+  set mindMapIndex(int newMindMapIndex){
+    _mindMapIndex = newMindMapIndex;
+    notifyListeners();
+  }
   MindMapImagesNotifier() {
     loadValue();
   }
@@ -46,6 +50,7 @@ class MindMapImagesNotifier extends ChangeNotifier {
   }
 
   updateMindMap(MindMap mindMap) {
+    print(mindMapIndex);
     _mindMaps[mindMapIndex] = mindMap;
     notifyListeners();
     MindMapDatabaseNotifier().updateMinMap(mindMap);
