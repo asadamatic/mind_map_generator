@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:gallery_saver/gallery_saver.dart';
-import 'package:mind_map_generator/CustomChangeNotifiers/connection_change_notifier.dart';
+// import 'package:gallery_saver/gallery_saver.dart';
 import 'package:mind_map_generator/CustomChangeNotifiers/mind_map_images_notifier.dart';
 import 'package:mind_map_generator/CustomChangeNotifiers/server_config_notifier.dart';
 import 'package:mind_map_generator/DataModels/mind_map.dart';
@@ -11,7 +10,7 @@ import 'package:provider/provider.dart';
 
 enum MindMapGeneratorScreenActions { insert, update, reCreate }
 
-class MindMapGeneratorScreen extends StatefulWidget {
+class MindMapGeneratorScreen extends StatelessWidget {
   final List<String> base64EncodedImages;
   final List<String> listOfData;
   final String docId;
@@ -23,12 +22,6 @@ class MindMapGeneratorScreen extends StatefulWidget {
       this.mapScreenActions,
       this.listOfData});
 
-  @override
-  _MindMapGeneratorScreenState createState() => _MindMapGeneratorScreenState();
-}
-
-class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
-  TextEditingController nameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -43,11 +36,11 @@ class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
       ),
       body: FutureBuilder<MindMap>(
         future:
-            widget.mapScreenActions == MindMapGeneratorScreenActions.reCreate
+            mapScreenActions == MindMapGeneratorScreenActions.reCreate
                 ? NetworkService(ipv4: ipv4, port: port)
-                    .editMindMap(widget.listOfData, widget.docId)
+                    .editMindMap(listOfData, docId)
                 : NetworkService(ipv4: ipv4, port: port)
-                    .generateMindMap(widget.base64EncodedImages, widget.docId),
+                    .generateMindMap(base64EncodedImages, docId),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
 
@@ -110,28 +103,28 @@ class _MindMapGeneratorScreenState extends State<MindMapGeneratorScreen> {
                                   textStyle: MaterialStateProperty.all(
                                       TextStyle(color: Colors.white))),
                               onPressed: () async {
-                                if (widget.mapScreenActions ==
+                                if (mapScreenActions ==
                                     MindMapGeneratorScreenActions.insert) {
                                   Provider.of<MindMapImagesNotifier>(context,
                                           listen: false)
                                       .append(snapshot.data);
 
-                                  await GallerySaver.saveImage(
-                                      directoryPath + snapshot.data.imageFile);
-                                } else if (widget.mapScreenActions ==
+                                  // await GallerySaver.saveImage(
+                                  //     directoryPath + snapshot.data.imageFile);
+                                } else if (mapScreenActions ==
                                         MindMapGeneratorScreenActions.update ||
-                                    widget.mapScreenActions ==
+                                    mapScreenActions ==
                                         MindMapGeneratorScreenActions
                                             .reCreate) {
                                   Provider.of<MindMapImagesNotifier>(context,
                                           listen: false)
                                       .updateMindMap(snapshot.data);
-                                  await GallerySaver.saveImage(
-                                      directoryPath + snapshot.data.imageFile);
+                                  // await GallerySaver.saveImage(
+                                  //     directoryPath + snapshot.data.imageFile);
                                 }
 
                                 DocumentsDatabaseNotifier()
-                                    .updateDocumentStatus(widget.docId, 1);
+                                    .updateDocumentStatus(docId, 1);
                                 Navigator.pop(context);
                               }),
                         ),

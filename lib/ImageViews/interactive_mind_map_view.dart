@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:mind_map_generator/CustomChangeNotifiers/mind_map_images_notifier.dart';
-import 'package:mind_map_generator/DataModels/mind_map.dart';
 
 import 'package:mind_map_generator/ListViews/document_images_grid_screen.dart';
 import 'package:mind_map_generator/mind_map_editing_screen.dart';
@@ -11,9 +10,8 @@ import 'package:provider/provider.dart';
 import 'package:share/share.dart';
 
 class InteractiveMindMapView extends StatelessWidget {
-  final MindMap oldMindMap;
 
-  InteractiveMindMapView({this.oldMindMap});
+  InteractiveMindMapView();
 
   @override
   Widget build(BuildContext context) {

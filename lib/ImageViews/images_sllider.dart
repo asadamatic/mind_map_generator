@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:share/share.dart';
 
 class ImagesSlider extends StatefulWidget {
-  List<DocumentImage> documentImages;
+  final List<DocumentImage> documentImages;
   final int startIndex;
   ImagesSlider({this.documentImages, this.startIndex});
   @override
@@ -32,6 +32,9 @@ class _ImagesSliderState extends State<ImagesSlider> {
     final directoryPath = Provider.of<Directory>(context).path;
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0.0,
+        iconTheme: IconThemeData(color: Theme.of(context).primaryColor),
         actions: [
           IconButton(
               icon: Icon(Icons.share),

@@ -4,18 +4,13 @@ import 'package:mind_map_generator/CustomChangeNotifiers/mind_map_images_notifie
 import 'package:mind_map_generator/CustomElements/draft_card.dart';
 import 'package:provider/provider.dart';
 
-class DraftsListScreen extends StatefulWidget {
-  @override
-  _DraftsListScreenState createState() => _DraftsListScreenState();
-}
+class DraftsListScreen extends StatelessWidget {
 
-class _DraftsListScreenState extends State<DraftsListScreen> {
   @override
   Widget build(BuildContext context) {
 
     final mindMapDocIds =
         Provider.of<MindMapImagesNotifier>(context).mindMapDocIds;
-    print(mindMapDocIds);
     return ChangeNotifierProvider.value(
       value: DraftImagesNotifier(),
       builder: (buildContext, child) {

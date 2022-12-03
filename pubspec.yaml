@@ -23,24 +23,23 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  image_picker: ^0.6.7+22
-  font_awesome_flutter: ^8.11.0
-  permission_handler: ^5.1.0+2
-  dialogs: ^0.0.4
-  path_provider: ^2.0.1
-  cupertino_icons: ^1.0.0
-  sk_onboarding_screen: ^1.0.1
-  shared_preferences: ^2.0.3
-  provider: ^5.0.0
+  image_picker:
+  font_awesome_flutter:
+  permission_handler:
+  dialogs: ^0.0.7
+  path_provider:
+  cupertino_icons:
+  sk_onboarding_screen:
+  shared_preferences:
+  provider:
   http:
-  sqflite: ^2.0.0+2
+  sqflite:
   path:
   intl:
-  image_cropper: ^1.4.0
-  graphview: ^0.6.7
-  page_transition: ^1.1.7+6
-  gallery_saver:
-  share: ^2.0.1
+  image_cropper: ^1.5.1
+  graphview:
+  page_transition:
+  share:
 dev_dependencies:
   flutter_test:
     sdk: flutter

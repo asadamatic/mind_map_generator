@@ -3,26 +3,14 @@ import 'package:mind_map_generator/CustomChangeNotifiers/mind_map_images_notifie
 import 'package:mind_map_generator/CustomChangeNotifiers/server_config_notifier.dart';
 import 'package:mind_map_generator/CustomElements/mind_map_card.dart';
 import 'package:mind_map_generator/ListViews/document_drafts.dart';
-import 'dart:io';
 
 import 'package:mind_map_generator/ListViews/document_images_grid_screen.dart';
 import 'package:provider/provider.dart';
 
-class MindMapsListScreen extends StatefulWidget {
-  @override
-  _MindMapsListScreenState createState() => _MindMapsListScreenState();
-}
-
-class _MindMapsListScreenState extends State<MindMapsListScreen> {
-  File scannedDocument;
+// ignore: must_be_immutable
+class MindMapsListScreen extends StatelessWidget {
   TextEditingController hostEditingController;
   TextEditingController portEditingController;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,53 +85,93 @@ class _MindMapsListScreenState extends State<MindMapsListScreen> {
                                               const EdgeInsets.only(top: 8.0),
                                           child: Row(
                                             children: [
+                                              SizedBox(
+                                                width: 20.0,
+                                              ),
                                               Expanded(
-                                                  flex: 5,
-                                                  child: FlatButton(
-                                                    child: Text(
-                                                      'Cancel',
-                                                    ),
-                                                    textColor: Theme.of(context)
-                                                        .primaryColor,
-                                                    padding: const EdgeInsets
-                                                            .symmetric(
-                                                        vertical: 0.0),
-                                                    color: Colors.white,
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10.0),
-                                                    ),
+                                                flex: 5,
+                                                child: TextButton(
+                                                    style: ButtonStyle(
+                                                        shape: MaterialStateProperty
+                                                            .all(
+                                                          RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          10.0)),
+                                                        ),
+                                                        textStyle: MaterialStateProperty
+                                                            .all(TextStyle(
+                                                                color: Theme.of(
+                                                                        context)
+                                                                    .primaryColor)),
+                                                        foregroundColor:
+                                                            MaterialStateProperty
+                                                                .all(Colors
+                                                                    .white)),
                                                     onPressed: () {
                                                       Navigator.pop(context);
                                                     },
-                                                  )),
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              0.0),
+                                                      child: Text(
+                                                        'Cancel',
+                                                        style: TextStyle(
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .primaryColor),
+                                                      ),
+                                                    )),
+                                              ),
                                               Spacer(flex: 1),
                                               Expanded(
-                                                  flex: 5,
-                                                  child: FlatButton(
-                                                    child: Text(
-                                                      'Done',
-                                                    ),
-                                                    textColor: Colors.white,
-                                                    padding: const EdgeInsets
-                                                            .symmetric(
-                                                        vertical: 0.0),
-                                                    color: Theme.of(context)
-                                                        .primaryColor,
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10.0),
-                                                    ),
+                                                flex: 5,
+                                                child: TextButton(
+                                                    style: ButtonStyle(
+                                                        backgroundColor:
+                                                            MaterialStateProperty
+                                                                .all(Theme.of(
+                                                                        context)
+                                                                    .primaryColor),
+                                                        shape: MaterialStateProperty
+                                                            .all(
+                                                          RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          10.0)),
+                                                        ),
+                                                        textStyle: MaterialStateProperty
+                                                            .all(TextStyle(
+                                                                color: Theme.of(
+                                                                        context)
+                                                                    .primaryColor)),
+                                                        foregroundColor:
+                                                            MaterialStateProperty
+                                                                .all(
+                                                                    Colors.white)),
                                                     onPressed: () {
-
-                                                      Provider.of<ServerConfigNotifier>(context, listen: false).setServerConfigValues(hostEditingController.text.trim(), portEditingController.text.trim());
+                                                      Provider.of<ServerConfigNotifier>(
+                                                              context,
+                                                              listen: false)
+                                                          .setServerConfigValues(
+                                                              hostEditingController
+                                                                  .text
+                                                                  .trim(),
+                                                              portEditingController
+                                                                  .text
+                                                                  .trim());
                                                       Navigator.pop(context);
                                                     },
-                                                  )),
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              0.0),
+                                                      child: Text('Done'),
+                                                    )),
+                                              )
                                             ],
                                           ),
                                         ),

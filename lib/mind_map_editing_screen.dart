@@ -6,7 +6,7 @@ import 'package:page_transition/page_transition.dart';
 
 class MindMapEditingScreen extends StatefulWidget {
   final List<String> listOfData;
-  String docId;
+  final String docId;
   final MindMap mindMap;
   MindMapEditingScreen({this.listOfData, this.docId, this.mindMap, Key key})
       : super(key: key);
@@ -16,7 +16,6 @@ class MindMapEditingScreen extends StatefulWidget {
 
 class _MindMapEditingScreenState extends State<MindMapEditingScreen> {
   List<TextEditingController> controllers;
-
 
   removeElementAtIndex(int index) {
     setState(() {
@@ -32,16 +31,16 @@ class _MindMapEditingScreenState extends State<MindMapEditingScreen> {
     controllers = [
       for (int index = 0; index < widget.listOfData.length; index++)
         index == 0
-            ? TextEditingController(text: widget.listOfData[index].toString().trim())
+            ? TextEditingController(
+                text: widget.listOfData[index].toString().trim())
             : TextEditingController(
-            text: widget.listOfData[index].toString()?.split('+-')[1].trim())
+                text:
+                    widget.listOfData[index].toString()?.split('+-')[1].trim())
     ];
   }
 
   @override
   Widget build(BuildContext context) {
-    print(widget.listOfData);
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Edit Mind Map'),
@@ -51,9 +50,7 @@ class _MindMapEditingScreenState extends State<MindMapEditingScreen> {
                 context,
                 PageTransition(
                     type: PageTransitionType.leftToRightWithFade,
-                    child: InteractiveMindMapView(
-                      oldMindMap: widget.mindMap,
-                    )));
+                    child: InteractiveMindMapView()));
           },
         ),
       ),
@@ -68,35 +65,36 @@ class _MindMapEditingScreenState extends State<MindMapEditingScreen> {
                   border: InputBorder.none,
                 ),
                 style: getTextStyle(widget.listOfData[index].toString()),
-
               ),
               trailing: IconButton(
                 icon: Icon(Icons.delete),
                 onPressed: () {
                   removeElementAtIndex(index);
-
                 },
               ),
             );
           }),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.done),
+        backgroundColor: Theme.of(context).primaryColor,
         onPressed: () {
-          List<String> newlsit = [widget.listOfData[0]];
-          for (int i = 1; i < widget.listOfData.length; i++) {
-            newlsit.add(widget.listOfData[i].replaceRange(
-                widget.listOfData[i].indexOf("+-"),
-                widget.listOfData[i].length,
-                "+-${controllers[i].text}"));
+          if (widget.listOfData.isNotEmpty) {
+            List<String> newlsit = [controllers[0].text.trim()];
+            for (int i = 1; i < widget.listOfData.length; i++) {
+              newlsit.add(widget.listOfData[i].replaceRange(
+                  widget.listOfData[i].indexOf("+-"),
+                  widget.listOfData[i].length,
+                  "+-${controllers[i].text.trim()}"));
+            }
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (buildContext) => MindMapGeneratorScreen(
+                        mapScreenActions:
+                            MindMapGeneratorScreenActions.reCreate,
+                        listOfData: newlsit,
+                        docId: widget.docId)));
           }
-          print(newlsit);
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (buildContext) => MindMapGeneratorScreen(
-                      mapScreenActions: MindMapGeneratorScreenActions.reCreate,
-                      listOfData: newlsit,
-                      docId: widget.docId)));
         },
       ),
     );
@@ -104,17 +102,15 @@ class _MindMapEditingScreenState extends State<MindMapEditingScreen> {
 
   TextStyle getTextStyle(String data) {
     if (data.toString().split('+-')[0] == '') {
-      return TextStyle( fontSize: 20.0);
+      return TextStyle(fontSize: 20.0);
     } else if (data.toString().split('+-')[0] == '+') {
       return TextStyle(fontSize: 19.0);
     } else if (data.toString().split('+-')[0] == '++') {
-      return TextStyle( fontSize: 18.0);
+      return TextStyle(fontSize: 18.0);
     } else if (data.toString().split('+-')[0] == '+++') {
       return TextStyle(fontSize: 17.0);
-    }else{
+    } else {
       return TextStyle(fontWeight: FontWeight.bold, fontSize: 22.0);
     }
-
-    return TextStyle();
   }
 }

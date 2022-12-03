@@ -1,6 +1,5 @@
 import 'dart:io';
-import 'package:dialogs/MessageDialog/message_dialog.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:dialogs/dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -67,7 +66,7 @@ class ImageService {
   }
 
   Future<File> cropImage(PickedFile pickedFile) async {
-    final file = await ImageCropper.cropImage(
+    final file = await ImageCropper().cropImage(
         sourcePath: File(pickedFile.path).path,
         androidUiSettings: const AndroidUiSettings(
           toolbarTitle: 'Cropper',

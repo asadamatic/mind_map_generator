@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mind_map_generator/DataModels/document_image.dart';
 import 'package:mind_map_generator/ImageService/image_service.dart';
+import 'package:mind_map_generator/ListViews/document_images_grid_screen.dart';
 import 'package:mind_map_generator/LocalDatabaseService/document_database.dart';
+import 'package:mind_map_generator/mind_map_generator_screen.dart';
 import 'package:share/share.dart';
 
 class DocumentImagesNotifier extends ChangeNotifier {
@@ -19,6 +21,8 @@ class DocumentImagesNotifier extends ChangeNotifier {
   List<DocumentImage> get documentImages => _documentImages;
   List<String> get documentImagePaths => _documentImagePaths;
 
+  String _id;
+  ImageScreenActions _imageScreenActions;
   set documentImages(List<DocumentImage> newDocumentImages) {
     _documentImages = newDocumentImages;
     notifyListeners();
@@ -34,8 +38,10 @@ class DocumentImagesNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  DocumentImagesNotifier({String docId}) {
+  DocumentImagesNotifier({String docId, ImageScreenActions imageScreenActions}) {
     loadValue(docId);
+    _imageScreenActions = imageScreenActions;
+    _id = docId;
   }
 
   Future<void> loadValue(String docId) async {
@@ -109,15 +115,14 @@ class DocumentImagesNotifier extends ChangeNotifier {
     Share.shareFiles(shareFiles);
   }
 
-  getDocumentImage(
-      String id, BuildContext buildContext, ImageSource imageSource) async {
+  getDocumentImage(BuildContext buildContext, ImageSource imageSource) async {
     final filePath = await ImageService()
         .captureImage(imageSource: imageSource, buildContext: buildContext);
 
     if (filePath != null) {
       Navigator.pop(buildContext);
       append(DocumentImage(
-          docId: id,
+          docId: _id,
           imageFilePath: filePath,
           imageId: DateTime.now().microsecondsSinceEpoch.toString(),
           status: 0));
@@ -143,4 +148,35 @@ class DocumentImagesNotifier extends ChangeNotifier {
     }).toList());
   }
 
+  proceedToGenerate(BuildContext context, String directoryPath) async {
+    if (_documentImages.length == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+        'Please scan your docs first!',
+        style: TextStyle(fontSize: 18.0),
+      )));
+    } else {
+      final images = await getBase64EncodedList(directoryPath);
+      if (_imageScreenActions == ImageScreenActions.fromDraft ||
+          _imageScreenActions == ImageScreenActions.newDocument) {
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) => MindMapGeneratorScreen(
+                      base64EncodedImages: images,
+                      docId: _id,
+                      mapScreenActions: MindMapGeneratorScreenActions.insert,
+                    )));
+      } else if (_imageScreenActions == ImageScreenActions.fromMindMap) {
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) => MindMapGeneratorScreen(
+                      base64EncodedImages: images,
+                      docId: _id,
+                      mapScreenActions: MindMapGeneratorScreenActions.update,
+                    )));
+      }
+    }
+  }
 }

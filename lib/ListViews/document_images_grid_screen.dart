@@ -4,7 +4,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mind_map_generator/CustomChangeNotifiers/document_images_notifier.dart';
 import 'package:mind_map_generator/CustomElements/image_card.dart';
-import 'package:mind_map_generator/mind_map_generator_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:share/share.dart';
 
@@ -40,7 +39,8 @@ class _DocumentImagesGridScreenState extends State<DocumentImagesGridScreen> {
   Widget build(BuildContext context) {
     final String directoryPath = Provider.of<Directory>(context).path;
     return ChangeNotifierProvider.value(
-        value: DocumentImagesNotifier(docId: id),
+        value: DocumentImagesNotifier(
+            docId: id, imageScreenActions: widget.imageScreenActions),
         builder: (buildContext, child) {
           final isSelected = Provider.of<DocumentImagesNotifier>(buildContext)
               .selectedDocumentImagesIndexes
@@ -265,6 +265,7 @@ class FloatingButtons extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 5.0),
           child: FloatingActionButton(
+
               heroTag: 'doneButton',
               backgroundColor: Colors.white,
               child: Icon(
@@ -272,44 +273,8 @@ class FloatingButtons extends StatelessWidget {
                 color: Theme.of(context).primaryColor,
               ),
               onPressed: () async {
-                if (Provider.of<DocumentImagesNotifier>(context, listen: false)
-                        .documentImages
-                        .length ==
-                    0) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(
-                    'Please scan your docs first!',
-                    style: TextStyle(fontSize: 18.0),
-                  )));
-                } else {
-                  final images = await Provider.of<DocumentImagesNotifier>(
-                          context,
-                          listen: false)
-                      .getBase64EncodedList(directoryPath);
-                  if (imageScreenActions == ImageScreenActions.fromDraft ||
-                      imageScreenActions == ImageScreenActions.newDocument) {
-                    Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => MindMapGeneratorScreen(
-                                  base64EncodedImages: images,
-                                  docId: id,
-                                  mapScreenActions:
-                                      MindMapGeneratorScreenActions.insert,
-                                )));
-                  } else if (imageScreenActions ==
-                      ImageScreenActions.fromMindMap) {
-                    Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => MindMapGeneratorScreen(
-                                  base64EncodedImages: images,
-                                  docId: id,
-                                  mapScreenActions:
-                                      MindMapGeneratorScreenActions.update,
-                                )));
-                  }
-                }
+                Provider.of<DocumentImagesNotifier>(context, listen: false)
+                    .proceedToGenerate(context, directoryPath);
               }),
         ),
         Padding(
@@ -343,7 +308,7 @@ class FloatingButtons extends StatelessWidget {
                                   Provider.of<DocumentImagesNotifier>(context,
                                           listen: false)
                                       .getDocumentImage(
-                                          id, buildContext, ImageSource.camera);
+                                          buildContext, ImageSource.camera);
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
@@ -366,8 +331,8 @@ class FloatingButtons extends StatelessWidget {
                                 onTap: () async {
                                   Provider.of<DocumentImagesNotifier>(context,
                                           listen: false)
-                                      .getDocumentImage(id, buildContext,
-                                          ImageSource.gallery);
+                                      .getDocumentImage(
+                                          buildContext, ImageSource.gallery);
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),

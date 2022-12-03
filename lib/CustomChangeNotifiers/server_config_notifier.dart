@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ServerConfigNotifier extends ChangeNotifier {
-  String host = '192.168.1.1', port = '8000';
+  String host , port;
 
   ServerConfigNotifier() {
     loadValue();
@@ -10,6 +10,7 @@ class ServerConfigNotifier extends ChangeNotifier {
 
   Future<void> loadValue() async {
     host = await getServerConfig('host');
+
     port = await getServerConfig('port');
   }
 

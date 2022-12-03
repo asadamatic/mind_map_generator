@@ -33,9 +33,6 @@ class DocumentsDatabaseNotifier extends ChangeNotifier {
       DocumentImage documentImage) async {
     // Get a reference to the database.
     final Database db = await LocalDatabase().database;
-    print(documentImage.docId);
-    print(documentImage.imageFilePath);
-    print(documentImage.imageId);
     await db.insert(
       _tableName,
       documentImage.toMap(),

@@ -5,26 +5,21 @@ import 'package:mind_map_generator/DataModels/document_image.dart';
 import 'package:mind_map_generator/ImageViews/images_sllider.dart';
 import 'package:provider/provider.dart';
 
-class ImageCard extends StatefulWidget {
+class ImageCard extends StatelessWidget {
   final DocumentImage imageDocument;
   final int imageIndex;
 
   ImageCard({this.imageDocument, this.imageIndex});
 
   @override
-  _ImageCardState createState() => _ImageCardState();
-}
-
-class _ImageCardState extends State<ImageCard> {
-  @override
   Widget build(BuildContext context) {
-    final imageFile = Provider.of<Directory>(context).path + widget.imageDocument.imageFilePath;
+    final imageFile = Provider.of<Directory>(context).path + imageDocument.imageFilePath;
     final isSelected = Provider.of<DocumentImagesNotifier>(context)
         .selectedDocumentImagesIndexes
         .isNotEmpty;
     final isCurrentSelected = Provider.of<DocumentImagesNotifier>(context)
         .selectedDocumentImagesIndexes
-        .contains(widget.imageIndex);
+        .contains(imageIndex);
     final documentImages = Provider.of<DocumentImagesNotifier>(context).documentImages;
     return Padding(
       padding: const EdgeInsets.all(0.0),
@@ -42,10 +37,10 @@ class _ImageCardState extends State<ImageCard> {
                       {
                         if (!isCurrentSelected) {
                           Provider.of<DocumentImagesNotifier>(context, listen: false)
-                              .appendSelectedIndexes(widget.imageIndex);
+                              .appendSelectedIndexes(imageIndex);
                         } else {
                           Provider.of<DocumentImagesNotifier>(context, listen: false)
-                              .removeAnIndexFromSelected(widget.imageIndex);
+                              .removeAnIndexFromSelected(imageIndex);
                         }
                       }
                     },
@@ -53,16 +48,16 @@ class _ImageCardState extends State<ImageCard> {
                       if (isSelected) {
                         if (!isCurrentSelected) {
                           Provider.of<DocumentImagesNotifier>(context, listen: false)
-                              .appendSelectedIndexes(widget.imageIndex);
+                              .appendSelectedIndexes(imageIndex);
                         } else {
                           Provider.of<DocumentImagesNotifier>(context, listen: false)
-                              .removeAnIndexFromSelected(widget.imageIndex);
+                              .removeAnIndexFromSelected(imageIndex);
                         }
                       } else {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (buildContext) => ImagesSlider(startIndex: widget.imageIndex,
+                                builder: (buildContext) => ImagesSlider(startIndex: imageIndex,
                                     documentImages: documentImages,)));
                       }
                     },
@@ -76,7 +71,7 @@ class _ImageCardState extends State<ImageCard> {
                               ? 8.0
                               : 0.0,
                       child: Hero(
-                          tag: '${widget.imageDocument.imageId}',
+                          tag: '${imageDocument.imageId}',
                           child: AspectRatio(
                             aspectRatio: 1/1.5,
                             child: Image(
@@ -97,10 +92,10 @@ class _ImageCardState extends State<ImageCard> {
 
                           if (isCurrentSelected) {
                             Provider.of<DocumentImagesNotifier>(context, listen: false)
-                                .removeAnIndexFromSelected(widget.imageIndex);
+                                .removeAnIndexFromSelected(imageIndex);
                           } else {
                             Provider.of<DocumentImagesNotifier>(context, listen: false)
-                                .appendSelectedIndexes(widget.imageIndex);
+                                .appendSelectedIndexes(imageIndex);
                           }
 
                         },
@@ -113,7 +108,7 @@ class _ImageCardState extends State<ImageCard> {
             padding:
             const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
             child: Text(
-              (widget.imageIndex + 1).toString(),
+              (imageIndex + 1).toString(),
               style: TextStyle(
                   color: Colors.black87,
                   fontWeight: FontWeight.bold,

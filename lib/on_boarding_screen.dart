@@ -1,8 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mind_map_generator/ListViews/mind_maps_list_screen.dart';
-import 'package:sk_onboarding_screen/flutter_onboarding.dart';
-import 'package:sk_onboarding_screen/sk_onboarding_screen.dart';
+import 'package:flutter/services.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final Function selectScreen;
@@ -25,8 +22,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           preferredSize: Size.fromHeight(0),
           child: AppBar(
             elevation: 0.0,
-            brightness: Brightness.light,
-            backgroundColor: Colors.white,
+            backgroundColor: Colors.white, systemOverlayStyle: SystemUiOverlayStyle.dark,
           )),
       body: Stack(
         children: <Widget>[
@@ -184,20 +180,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               padding: const EdgeInsets.all(8.0),
               child: Visibility(
                 visible: currentPage > 0 ? true : false,
-                child: FlatButton(
-                  child: Text(
-                    'Previous',
-                    style: TextStyle(
-                        color: Theme.of(context).primaryColor, fontSize: 18.0),
-                  ),
-                  onPressed: () {
-                    if (currentPage != 0) {
-                      pageController.previousPage(
-                          duration: Duration(milliseconds: 300),
-                          curve: Curves.easeIn);
-                    }
-                  },
-                ),
+                child: TextButton(
+                    style: ButtonStyle(
+                      textStyle: MaterialStateProperty.all(
+                          TextStyle(color: Theme.of(context).primaryColor, fontSize: 18.0)),
+                    ),
+                    onPressed: () {
+                      if (currentPage != 0) {
+                        pageController.previousPage(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeIn);
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(0.0),
+                      child: Text('Previous'),
+                    )),
               ),
             ),
           ),
@@ -205,38 +203,42 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             alignment: Alignment.bottomRight,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: FlatButton(
-                child: Text(
-                  currentPage < 2 ? 'Next' : 'Get Started',
-                  style: TextStyle(
-                      color: Theme.of(context).primaryColor, fontSize: 18.0),
-                ),
-                onPressed: () {
-                  if (currentPage == 2) {
-                    widget.selectScreen();
-                  } else {
-                    pageController.nextPage(
-                        duration: Duration(milliseconds: 400),
-                        curve: Curves.easeIn);
-                  }
-                },
-              ),
+              child: TextButton(
+                  style: ButtonStyle(
+                    textStyle: MaterialStateProperty.all(
+                        TextStyle(color: Theme.of(context).primaryColor, fontSize: 18.0)),
+                  ),
+                  onPressed: () {
+                    if (currentPage == 2) {
+                      widget.selectScreen();
+                    } else {
+                      pageController.nextPage(
+                          duration: Duration(milliseconds: 400),
+                          curve: Curves.easeIn);
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(0.0),
+                    child: Text(currentPage < 2 ? 'Next' : 'Get Started',),
+                  )),
             ),
           ),
           Align(
             alignment: Alignment.topRight,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: FlatButton(
-                child: Text(
-                  'Skip',
-                  style: TextStyle(
-                      color: Theme.of(context).primaryColor, fontSize: 18.0),
-                ),
-                onPressed: () {
-                  widget.selectScreen();
-                },
-              ),
+              child: TextButton(
+                  style: ButtonStyle(
+                    textStyle: MaterialStateProperty.all(
+                        TextStyle(color: Theme.of(context).primaryColor, fontSize: 18.0)),
+                  ),
+                  onPressed: () {
+                    widget.selectScreen();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(0.0),
+                    child: Text('Skip'),
+                  )),
             ),
           ),
         ],

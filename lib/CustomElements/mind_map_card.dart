@@ -2,62 +2,57 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mind_map_generator/Constants/functions.dart';
 import 'package:mind_map_generator/CustomChangeNotifiers/mind_map_images_notifier.dart';
 import 'package:mind_map_generator/DataModels/mind_map.dart';
 import 'package:mind_map_generator/ImageViews/interactive_mind_map_view.dart';
 import 'package:provider/provider.dart';
 
-class MindMapCard extends StatefulWidget {
+class MindMapCard extends StatelessWidget {
   final MindMap mindMap;
   final int imageIndex;
   MindMapCard({this.mindMap, this.imageIndex});
-  @override
-  _MindMapCardState createState() => _MindMapCardState();
-}
-
-class _MindMapCardState extends State<MindMapCard> {
+ 
   @override
   Widget build(BuildContext context) {
     final imageFile = Provider.of<Directory>(context).path +
-        widget.mindMap.imageFile;
+        mindMap.imageFile;
     final isSelected = Provider.of<MindMapImagesNotifier>(context)
         .selectedMindMapIndexes
         .isNotEmpty;
     final isCurrentSelected = Provider.of<MindMapImagesNotifier>(context)
         .selectedMindMapIndexes
-        .contains(widget.imageIndex);
+        .contains(imageIndex);
 
     final String formattedDate =
-        DateFormat.yMMMMEEEEd().format(DateTime.parse(DateTime.fromMicrosecondsSinceEpoch(int.parse(widget.mindMap.docId)).toString()));
+        DateFormat.yMMMMEEEEd().format(DateTime.parse(DateTime.fromMicrosecondsSinceEpoch(int.parse(mindMap.docId)).toString()));
     return InkWell(
       onLongPress: () {
         if (!isCurrentSelected) {
           Provider.of<MindMapImagesNotifier>(context, listen: false)
-              .appendSelectedIndexes(widget.imageIndex);
+              .appendSelectedIndexes(imageIndex);
         } else {
           Provider.of<MindMapImagesNotifier>(context, listen: false)
-              .removeAnIndexFromSelected(widget.imageIndex);
+              .removeAnIndexFromSelected(imageIndex);
         }
       },
       onTap: () {
         if (isSelected) {
           if (!isCurrentSelected) {
             Provider.of<MindMapImagesNotifier>(context, listen: false)
-                .appendSelectedIndexes(widget.imageIndex);
+                .appendSelectedIndexes(imageIndex);
           } else
           {
             Provider.of<MindMapImagesNotifier>(context, listen: false)
-                .removeAnIndexFromSelected(widget.imageIndex);
+                .removeAnIndexFromSelected(imageIndex);
           }
         } else {
           Provider.of<MindMapImagesNotifier>(context, listen: false)
-              .mindMapIndex = widget.imageIndex;
+              .mindMapIndex = imageIndex;
           Navigator.push(
               context,
               MaterialPageRoute(
                   builder: (buildContext) => InteractiveMindMapView(
-                        oldMindMap: widget.mindMap,
+
                       )));
         }
       },
@@ -85,7 +80,7 @@ class _MindMapCardState extends State<MindMapCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        widget.mindMap.name ?? '',
+                        mindMap.name ?? '',
                         style: Theme.of(context).textTheme.headline6,
                       ),
                       Text(formattedDate ?? '')
@@ -100,11 +95,11 @@ class _MindMapCardState extends State<MindMapCard> {
                       if (isCurrentSelected) {
                         Provider.of<MindMapImagesNotifier>(context,
                                 listen: false)
-                            .removeAnIndexFromSelected(widget.imageIndex);
+                            .removeAnIndexFromSelected(imageIndex);
                       } else {
                         Provider.of<MindMapImagesNotifier>(context,
                                 listen: false)
-                            .appendSelectedIndexes(widget.imageIndex);
+                            .appendSelectedIndexes(imageIndex);
                       }
                     })
             ],

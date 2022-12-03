@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
 import 'package:mind_map_generator/DataModels/mind_map.dart';
 import 'package:path_provider/path_provider.dart';
